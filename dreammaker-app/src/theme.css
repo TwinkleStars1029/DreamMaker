@@ -1,0 +1,52 @@
+/* =========================
+   🎨 主題色系變數（依主題切換）
+   ========================= */
+   [data-theme='color1'] { 
+    --primary-color: #D8E3E7;
+    --accent-color: #E8C099;
+    --text-color: #747474;
+    --tag-bg-color: #D8E3E7;  
+    --tag-text-color: #747474; 
+    --button-bg-color: #F2AA84; 
+    --button-hover-bg-color: #F2AA84;
+    --button-text-color: #FFFFFF; 
+    --subtext-color: #747474; 
+    --el-color-primary: var(--primary-color);
+    --background-gradient: linear-gradient(180deg, var(--primary-color), var(--accent-color));
+
+
+    --line-color: rgba(255, 119, 180, 0.2);
+  }
+  
+   [data-theme='color2'] { 
+    --primary-color: #B7F8DB; 
+    --accent-color: #50A7C2;
+    --text-color: #747474;
+    --tag-bg-color: #B7F8DB;  
+    --tag-text-color: #747474; 
+    --button-bg-color: #50A7C2; 
+    --button-hover-bg-color: #3A8E9D;
+    --button-text-color: #FFFFFF; 
+    --subtext-color: #747474; 
+    --el-color-primary: var(--primary-color);
+    --background-gradient: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+
+    --line-color: rgba(255, 119, 180, 0.2);
+  }
+
+
+   [data-theme='color3'] { 
+    --primary-color: #dad4ec; 
+    --accent-color: #fce5f4;
+    --text-color: #747474;
+    --tag-bg-color: #f3e7e9;  
+    --tag-text-color: #747474; 
+    --button-bg-color: #b5a8da; 
+    --button-hover-bg-color: #a18ccf;
+    --button-text-color: #FFFFFF; 
+    --subtext-color: #747474; 
+    --el-color-primary: var(--primary-color);
+    --background-gradient: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+
+    --line-color: rgba(255, 119, 180, 0.2);
+  }
