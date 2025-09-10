@@ -5,57 +5,58 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  workflow_dispatch:
 
-# 設定 GITHUB_TOKEN 權限
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# 防止並行部署
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
-    
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: 'dreammaker-app/package-lock.json'
-        
-    - name: Install dependencies
-      run: |
-        cd dreammaker-app
-        npm ci
-        
-    - name: Build
-      run: |
-        cd dreammaker-app
-        npm run build
-        
-    - name: Setup Pages
-      uses: actions/configure-pages@v4
-      
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: 'dreammaker-app/dist'
-        
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
-      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-      
-    - name: Output deployment URL
-      run: |
-        echo "Deployment completed! Your app is available at:"
-        echo "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'dreammaker-app/package-lock.json'
+
+      - name: Install deps
+        run: |          
+          cd dreammaker-app
+          npm install
+
+      - name: Build
+        run: |
+          cd dreammaker-app
+          npm run build
+
+      # 如果你用 Vue Router history 模式，做 SPA fallback（安全加上也無妨）
+      - name: Add SPA 404 fallback
+        run: |
+          cp dreammaker-app/dist/index.html dreammaker-app/dist/404.html
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'dreammaker-app/dist'
+
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
