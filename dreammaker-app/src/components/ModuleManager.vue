@@ -1,38 +1,32 @@
 <template>
-  <div class="space-y-6">
-    <div class="flex justify-between items-center">
-      <h2 class="text-2xl font-bold text-gray-900">模組管理</h2>
-      <div class="flex space-x-2">
-        <select
-          v-model="selectedModuleType"
-          class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        >
+  <div class="module-manager space-y-6">
+    <!-- 頁首 -->
+    <div class="page-header">
+      <h2 class="page-title">模組管理</h2>
+      <div class="flex gap-2">
+        <select v-model="selectedModuleType" class="input w-56">
           <option value="">選擇模組類型</option>
           <option value="basic">基本資訊</option>
           <option value="persona">性格特徵</option>
           <option value="background">背景故事</option>
           <option value="instruction">指令片段</option>
         </select>
-        <button
-          @click="isCreating = true"
-          class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-        >
+        <button @click="isCreating = true" type="button" class="btn btn-primary floating pulse-soft">
           新增模組
         </button>
       </div>
     </div>
 
-    <!-- 模組類型篩選 -->
-    <div class="flex space-x-2">
+    <!-- 快速篩選 -->
+    <div class="flex flex-wrap gap-2">
       <button
         v-for="type in moduleTypes"
-        :key="type.value"
+        :key="type.value || 'all'"
+        type="button"
         @click="selectedModuleType = type.value"
         :class="[
-          'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
-          selectedModuleType === type.value
-            ? 'bg-blue-100 text-blue-700'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          'btn',
+          selectedModuleType === type.value ? 'btn-secondary' : 'btn-ghost btn-sm'
         ]"
       >
         {{ type.label }}
@@ -40,143 +34,120 @@
     </div>
 
     <!-- 建立/編輯表單 -->
-    <div v-if="isCreating || editingId" class="bg-white p-6 rounded-lg shadow">
-      <h3 class="text-lg font-semibold mb-4">
-        {{ editingId ? '編輯模組' : '新增模組' }}
-      </h3>
-      <div class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">
-            模組類型 *
-          </label>
-          <select
-            v-model="formData.type"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
+    <section v-if="isCreating || editingId" class="modern-card">
+      <div class="form-header">
+        <h3 class="form-title">{{ editingId ? '編輯模組' : '新增模組' }}</h3>
+      </div>
+
+      <div class="form-content">
+        <div class="form-row">
+          <label class="form-label">模組類型 *</label>
+          <select v-model="formData.type" class="input w-full">
             <option value="basic">基本資訊</option>
             <option value="persona">性格特徵</option>
             <option value="background">背景故事</option>
             <option value="instruction">指令片段</option>
           </select>
         </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">
-            模組標題 *
-          </label>
+
+        <div class="form-row">
+          <label class="form-label">模組標題 *</label>
           <input
-            v-model="formData.title"
+            v-model.trim="formData.title"
             type="text"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            class="input"
             placeholder="輸入模組標題"
+            @keyup.enter="submit"
           />
         </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">
-            模組內容 *
-          </label>
+
+        <div class="form-row">
+          <label class="form-label">模組內容 *</label>
           <textarea
-            v-model="formData.content"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            v-model.trim="formData.content"
+            class="input textarea"
             rows="4"
             :placeholder="getPlaceholder(formData.type)"
           />
         </div>
-        <div v-if="formData.type === 'persona'">
-          <label class="block text-sm font-medium text-gray-700 mb-1">
-            語氣提示
-          </label>
+
+        <div class="form-row" v-if="formData.type === 'persona'">
+          <label class="form-label">語氣提示</label>
           <input
             v-model="formData.toneHints"
             type="text"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            class="input"
             placeholder="用逗號分隔，例如：溫柔, 抒情, 文學感"
           />
         </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">
-            版本描述
-          </label>
+
+        <div class="form-row">
+          <label class="form-label">版本描述</label>
           <input
             v-model="formData.versionNote"
             type="text"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            class="input"
             placeholder="例如：溫柔版 v1、冷酷版 v2"
+            @keyup.enter="submit"
           />
         </div>
-        <div class="flex space-x-3">
+
+        <div class="form-actions">
           <button
-            @click="editingId ? handleUpdate() : handleCreate()"
-            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            type="button"
+            class="btn btn-primary"
+            @click="submit"
+            :disabled="!formData.title.trim() || !formData.content.trim()"
           >
             {{ editingId ? '更新' : '建立' }}
           </button>
-          <button
-            @click="handleCancel"
-            class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
-          >
-            取消
-          </button>
+          <button type="button" class="btn btn-ghost" @click="handleCancel">取消</button>
         </div>
       </div>
-    </div>
+    </section>
 
     <!-- 模組列表 -->
-    <div class="space-y-4">
-      <div
+    <div class="grid auto-rows-fr gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <article
         v-for="module in filteredModules"
         :key="module.id"
-        class="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow"
+        class="modern-card"
       >
-        <div class="flex items-start justify-between">
-          <div class="flex-1">
-            <div class="flex items-center space-x-2 mb-2">
-              <span
-                :class="[
-                  'px-2 py-1 text-xs font-medium rounded',
-                  getModuleTypeColor(module.type)
-                ]"
-              >
-                {{ getModuleTypeLabel(module.type) }}
-              </span>
-              <h3 class="text-lg font-semibold text-gray-900">
-                {{ module.title }}
-              </h3>
-            </div>
-            <p class="text-gray-600 text-sm mb-3 whitespace-pre-wrap">
-              {{ module.content }}
-            </p>
-            <div v-if="module.toneHints && module.toneHints.length > 0" class="flex flex-wrap gap-1">
-              <span
-                v-for="(hint, index) in module.toneHints"
-                :key="index"
-                class="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded"
-              >
-                {{ hint }}
-              </span>
-            </div>
+        <header class="mb-3 flex items-start justify-between">
+          <div class="flex items-center gap-2">
+            <span class="tag" :class="typeTone(module.type)">{{ getModuleTypeLabel(module.type) }}</span>
+            <h3 class="text-base font-semibold text-primary-900 role-name">
+              {{ module.title }}
+            </h3>
           </div>
-          <div class="flex space-x-2 ml-4">
-            <button
-              @click="handleEdit(module)"
-              class="text-blue-600 hover:text-blue-800 text-sm"
-            >
-              編輯
-            </button>
-            <button
-              @click="handleDelete(module.id)"
-              class="text-red-600 hover:text-red-800 text-sm"
-            >
-              刪除
-            </button>
+          <div class="flex gap-2">
+            <button type="button" class="action-btn action-btn-edit" @click="handleEdit(module)">編輯</button>
+            <button type="button" class="action-btn action-btn-delete" @click="handleDelete(module.id)">刪除</button>
           </div>
+        </header>
+
+        <p class="text-sm text-body whitespace-pre-wrap role-description">
+          {{ module.content }}
+        </p>
+
+        <div v-if="module.toneHints?.length" class="mt-3 flex flex-wrap gap-2">
+          <span v-for="(hint, i) in module.toneHints" :key="i" class="tag tag-primary">{{ hint }}</span>
         </div>
-      </div>
+      </article>
     </div>
 
-    <div v-if="filteredModules.length === 0" class="text-center py-12">
-      <p class="text-gray-500">
-        {{ selectedModuleType ? `沒有 ${getModuleTypeLabel(selectedModuleType)} 模組` : '還沒有任何模組' }}
-      </p>
+    <!-- 空狀態 -->
+    <div v-if="filteredModules.length === 0" class="empty-state">
+      <div class="empty-state-card">
+        <div class="empty-state-icon">
+          <div class="spinner-warm mx-auto"></div>
+        </div>
+        <p class="empty-state-text">
+          {{ selectedModuleType ? `沒有 ${getModuleTypeLabel(selectedModuleType)} 模組` : '還沒有任何模組' }}
+        </p>
+        <p class="empty-state-subtext">點擊「新增模組」開始建立吧！</p>
+        <button type="button" class="btn btn-primary shimmer-soft" @click="isCreating = true">新增模組</button>
+      </div>
     </div>
   </div>
 </template>
@@ -192,6 +163,7 @@ const { modules, createModule, updateModule, deleteModule } = store
 const selectedModuleType = ref('')
 const isCreating = ref(false)
 const editingId = ref<string | null>(null)
+
 const formData = reactive({
   type: 'basic' as Module['type'],
   title: '',
@@ -209,48 +181,46 @@ const moduleTypes = [
 ]
 
 const filteredModules = computed(() => {
-  if (!selectedModuleType.value) return modules
-  return modules.filter(module => module.type === selectedModuleType.value)
+  return selectedModuleType.value
+    ? modules.filter(m => m.type === selectedModuleType.value)
+    : modules
 })
 
-const getModuleTypeLabel = (type: Module['type']) => {
-  const labels = {
-    basic: '基本資訊',
-    persona: '性格特徵',
-    background: '背景故事',
-    instruction: '指令片段',
+const getModuleTypeLabel = (type: Module['type']) => ({
+  basic: '基本資訊',
+  persona: '性格特徵',
+  background: '背景故事',
+  instruction: '指令片段',
+}[type])
+
+// 把類型映射到不同色調（以 .tag 與設計變數呈現）
+function typeTone(type: Module['type']) {
+  switch (type) {
+    case 'basic':       return 'tag-info'
+    case 'persona':     return 'tag-warning'
+    case 'background':  return 'tag-success'
+    case 'instruction': return 'tag-danger'
+    default:            return 'tag-primary'
   }
-  return labels[type]
 }
 
-const getModuleTypeColor = (type: Module['type']) => {
-  const colors = {
-    basic: 'bg-blue-100 text-blue-800',
-    persona: 'bg-purple-100 text-purple-800',
-    background: 'bg-green-100 text-green-800',
-    instruction: 'bg-orange-100 text-orange-800',
-  }
-  return colors[type]
-}
+const getPlaceholder = (type: Module['type']) => ({
+  basic: '描述角色的基本資訊，如外貌、年齡、職業等',
+  persona: '描述角色的性格特徵，如個性、說話方式、行為模式等',
+  background: '描述角色的背景故事，如經歷、世界觀、設定等',
+  instruction: '輸入指令片段，如行為規則、對話語氣強化等',
+}[type])
 
-const getPlaceholder = (type: Module['type']) => {
-  const placeholders = {
-    basic: '描述角色的基本資訊，如外貌、年齡、職業等',
-    persona: '描述角色的性格特徵，如個性、說話方式、行為模式等',
-    background: '描述角色的背景故事，如經歷、世界觀、設定等',
-    instruction: '輸入指令片段，如行為規則、對話語氣強化等',
-  }
-  return placeholders[type]
-}
-
-const handleCreate = () => {
+function submit() {
   if (!formData.title.trim() || !formData.content.trim()) return
+  editingId.value ? handleUpdate() : handleCreate()
+}
 
+function handleCreate() {
   const toneHints = formData.toneHints
-    ? formData.toneHints.split(',').map(hint => hint.trim()).filter(Boolean)
+    ? formData.toneHints.split(/[,，]/g).map(s => s.trim()).filter(Boolean)
     : undefined
-
-  const title = formData.versionNote 
+  const title = formData.versionNote
     ? `${formData.title} (${formData.versionNote})`
     : formData.title
 
@@ -260,27 +230,25 @@ const handleCreate = () => {
     content: formData.content,
     toneHints,
   })
-
   resetForm()
 }
 
-const handleEdit = (module: Module) => {
+function handleEdit(module: Module) {
   editingId.value = module.id
+  isCreating.value = true
   formData.type = module.type
   formData.title = module.title
   formData.content = module.content
-  formData.toneHints = module.toneHints ? module.toneHints.join(', ') : ''
+  formData.toneHints = module.toneHints?.join(', ') || ''
   formData.versionNote = ''
 }
 
-const handleUpdate = () => {
-  if (!editingId.value || !formData.title.trim() || !formData.content.trim()) return
-
+function handleUpdate() {
+  if (!editingId.value) return
   const toneHints = formData.toneHints
-    ? formData.toneHints.split(',').map(hint => hint.trim()).filter(Boolean)
+    ? formData.toneHints.split(/[,，]/g).map(s => s.trim()).filter(Boolean)
     : undefined
-
-  const title = formData.versionNote 
+  const title = formData.versionNote
     ? `${formData.title} (${formData.versionNote})`
     : formData.title
 
@@ -290,21 +258,18 @@ const handleUpdate = () => {
     content: formData.content,
     toneHints,
   })
-
   resetForm()
 }
 
-const handleDelete = (id: string) => {
+function handleDelete(id: string) {
   if (window.confirm('確定要刪除這個模組嗎？')) {
     deleteModule(id)
   }
 }
 
-const handleCancel = () => {
-  resetForm()
-}
+function handleCancel() { resetForm() }
 
-const resetForm = () => {
+function resetForm() {
   formData.type = 'basic'
   formData.title = ''
   formData.content = ''
@@ -314,3 +279,73 @@ const resetForm = () => {
   editingId.value = null
 }
 </script>
+
+<style scoped>
+.module-manager { padding: var(--spacing-lg); }
+
+/* 頁首 */
+.page-header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding-bottom: var(--spacing-lg);
+  border-bottom: 1px solid var(--border-light);
+}
+.page-title{
+  font-size: 1.5rem; font-weight: 700; margin: 0;
+  color: var(--text-color);
+  background: var(--gradient-warm);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+
+
+/* 表單區域（沿用 modern-card 結構） */
+.form-header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--border-light);
+}
+.form-title{ margin:0; font-weight:600; color: var(--text-color); }
+.form-content{ padding: var(--spacing-xl); }
+.form-row{ margin-bottom: var(--spacing-lg); }
+.form-actions{
+  display:flex; gap: var(--spacing-md);
+  margin-top: var(--spacing-xl); padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--border-light);
+}
+
+/* 文章卡片補充（.modern-card 已提供底色/陰影） */
+.text-body { color: var(--subtext-color); }
+
+/* 列表卡片上的動作按鈕，沿用你的風格 */
+.action-btn{
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-size: .875rem; font-weight: 500;
+  cursor: pointer; transition: all var(--transition-fast);
+  border: none;
+  
+}
+.action-btn-edit{ background: var(--primary-color); color: var(--text-color); }
+.action-btn-edit:hover{ background: var(--button-bg-color); color: var(--button-text-color); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.action-btn-delete{ background: transparent; color: #dc2626; border: 1px solid #dc2626; }
+.action-btn-delete:hover{ background: #dc2626; color: #fff; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(220,38,38,.25); }
+
+/* 空狀態樣式覆用全站 tokens（與 Role 版一致） */
+.empty-state{ display:flex; justify-content:center; align-items:center; min-height: 320px; }
+.empty-state-card{
+  background: var(--surface-card); backdrop-filter: blur(12px);
+  border: 1px solid var(--border-light); border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg); padding: 2.5rem; text-align:center; max-width: 400px; width: 100%;
+  transition: all var(--transition-normal);
+}
+.empty-state-card:hover{ transform: translateY(-4px); box-shadow: var(--shadow-xl); border-color: var(--border-accent); }
+.empty-state-icon{ margin-bottom: var(--spacing-lg); }
+.empty-state-text{ font-size: 1.125rem; font-weight: 600; color: var(--text-color); margin: 0 0 var(--spacing-sm); }
+.empty-state-subtext{ color: var(--subtext-color); margin-bottom: var(--spacing-xl); }
+
+/* RWD */
+@media (max-width: 768px){
+  .page-header{ flex-direction: column; gap: var(--spacing-md); text-align:center; }
+  .form-content{ padding: var(--spacing-lg); }
+  .form-actions{ flex-direction: column; }
+}
+</style>

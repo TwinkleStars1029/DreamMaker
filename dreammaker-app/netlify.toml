@@ -32,4 +32,3 @@
 
 [context.branch-deploy]
   command = "npm run build"
-

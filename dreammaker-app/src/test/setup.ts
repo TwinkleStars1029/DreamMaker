@@ -55,4 +55,3 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
 config.global.mocks = {
   $t: (key: string) => key,
 }
-

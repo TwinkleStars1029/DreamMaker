@@ -2,9 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 溫暖柔和主題系統 */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
 :root {
   /* 基礎色調模板 */
   --primary-color: #D8E3E7;
@@ -13,42 +10,13 @@
   --tag-bg-color: #D8E3E7;  
   --tag-text-color: #747474; 
   --button-bg-color: #F2AA84; 
-  --button-hover-bg-color: #F2AA84;
+  --button-hover-bg-color: #e99a70;
   --button-text-color: #FFFFFF; 
   --subtext-color: #747474; 
   --el-color-primary: var(--primary-color);
   --background-gradient: linear-gradient(180deg, var(--primary-color), var(--accent-color));
   --line-color: rgba(255, 119, 180, 0.2);
   
-  /* 擴展色彩系統 */
-  --primary-light: #E5EDF0;
-  --primary-dark: #C5D2D7;
-  --accent-light: #F0CDB1;
-  --accent-dark: #D4A977;
-  --button-light: #F5B897;
-  --button-dark: #E6956F;
-  
-  /* 語義化色彩（基於主色調） */
-  --success-color: #B8D4C2;
-  --success-light: #CAE0CF;
-  --warning-color: #E8C099;
-  --warning-light: #F0D1B1;
-  --danger-color: #E8A099;
-  --danger-light: #F0B3A9;
-  --info-color: #A9C4E8;
-  --info-light: #BDD2F0;
-  
-  /* 中性色彩（溫暖色調） */
-  --neutral-50: #FDFCFC;
-  --neutral-100: #F9F7F6;
-  --neutral-200: #F0EDEC;
-  --neutral-300: #E3DFDD;
-  --neutral-400: #B8B2AE;
-  --neutral-500: #8C8580;
-  --neutral-600: #6B645F;
-  --neutral-700: #4A453F;
-  --neutral-800: #2D2923;
-  --neutral-900: #1A1714;
   
   /* 背景系統 */
   --bg-primary: var(--background-gradient);
@@ -187,13 +155,13 @@ body {
 }
 
 .btn-primary {
-  background: var(--gradient-button);
+  background: var(--button-bg-color);
   color: var(--button-text-color);
   box-shadow: var(--shadow-button);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--button-dark) 0%, var(--button-bg-color) 100%);
+  background: var(--button-bg-color);
   transform: translateY(-2px);
   box-shadow: 0 8px 20px 0 rgba(242, 170, 132, 0.45);
 }
@@ -211,13 +179,14 @@ body {
 }
 
 .btn-accent {
-  background: var(--gradient-accent);
-  color: var(--text-color);
+  
+  background:var(--button-bg-color);
+  color: var(--button-text-color);
   box-shadow: 0 4px 14px 0 rgba(232, 192, 153, 0.35);
 }
 
 .btn-accent:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--accent-dark) 0%, var(--accent-color) 100%);
+  background: var(--button-hover-bg-color);
   transform: translateY(-2px);
   box-shadow: 0 8px 20px 0 rgba(232, 192, 153, 0.45);
 }
@@ -289,6 +258,13 @@ body {
   color: var(--subtext-color);
 }
 
+.textarea {
+  border-radius: var(--radius-md);  /* 方一點比較自然 */
+  min-height: 6rem;                 /* 預設高度 */
+  line-height: 1.5;                 /* 讓文字比較舒適 */
+  resize: vertical;                 /* 允許使用者調整高度 */
+  padding: 1rem 1.25rem;            /* 與 input 一致但更舒展 */
+}
 /* 現代標籤 */
 .tag {
   display: inline-flex;
@@ -462,26 +438,6 @@ body {
   100% { left: 100%; }
 }
 
-/* 溫暖色調滾動條 */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--neutral-100);
-  border-radius: var(--radius-sm);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--gradient-button);
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--gradient-warm);
-}
 
 /* 載入動畫 */
 .spinner {
