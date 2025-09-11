@@ -8,7 +8,7 @@ cd dreammaker-app
 
 REM 安裝依賴
 echo 📦 安裝依賴...
-npm install
+npm ci
 
 REM 建置專案
 echo 🔨 建置專案...
