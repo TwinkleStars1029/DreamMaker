@@ -9,7 +9,7 @@ cd dreammaker-app
 
 # 安裝依賴
 echo "📦 安裝依賴..."
-npm ci
+npm install
 
 # 建置專案
 echo "🔨 建置專案..."
