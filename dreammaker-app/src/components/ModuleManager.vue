@@ -25,12 +25,13 @@
         type="button"
         @click="selectedModuleType = type.value"
         :class="[
-          'btn',
-          selectedModuleType === type.value ? 'btn-secondary' : 'btn-ghost btn-sm'
+          'btn','btn-sm',
+          selectedModuleType === type.value ? 'btn-secondary' : 'btn-ghost'
         ]"
       >
         {{ type.label }}
       </button>
+
     </div>
 
     <!-- 建立/編輯表單 -->

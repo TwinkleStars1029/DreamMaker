@@ -167,8 +167,9 @@ body {
 }
 
 .btn-secondary {
-  background: var(--gradient-primary);
-  color: var(--text-color);
+  background: var(--surface-elevated);
+  color: var(--button-bg-color);
+  border: 2px solid var(--button-bg-color);
   box-shadow: var(--shadow-colored);
 }
 
@@ -206,7 +207,7 @@ body {
 }
 
 .btn-ghost {
-  background: var(--surface-glass);
+  background: var(--surface-color);
   backdrop-filter: blur(10px);
   color: var(--subtext-color);
   border: 1px solid var(--border-light);
@@ -281,6 +282,13 @@ body {
 
 .tag:hover {
   transform: translateY(-1px);
+}
+.tag.is-active{
+  background:  #fff;
+  color:  #fff;
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+  transition: background .15s ease, color .15s ease, border-color .15s ease, transform .15s ease;
 }
 
 .tag-primary {
@@ -479,6 +487,62 @@ body {
 .bg-gradient-warm { background: var(--gradient-warm); }
 .bg-gradient-soft { background: var(--gradient-soft); }
 
+/* === Toast: top-center stack (global) === */
+.toast-stack {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 100vw;
+  z-index: 1000; /* 高於 modal */
+  pointer-events: none; /* 讓空白區不擋點擊 */
+}
+
+.toast {
+  pointer-events: auto; /* 讓 toast 本體可點（若未來要加關閉鈕） */
+  min-width: min(92vw, 520px);
+  max-width: min(92vw, 640px);
+  padding: .75rem 1rem;
+  border-radius: .75rem;
+  border: 1px solid var(--border-light, #e5e7eb);
+  background: var(--surface-card, #ffffff);
+  color: var(--text-color, #111827);
+  box-shadow: var(--shadow-md, 0 10px 16px rgba(0,0,0,.08));
+  animation: toast-enter .24s ease-out;
+}
+
+/* 類型樣式：用上方彩條+字色微調 */
+.toast::before {
+  content: "";
+  display: block;
+  height: 3px;
+  margin: -0.75rem -1rem .5rem -1rem;
+  border-top-left-radius: .75rem;
+  border-top-right-radius: .75rem;
+  background: var(--border-medium, #e5e7eb);
+}
+
+/* 文字顏色可依類型微調（可選） */
+.toast-success { color: var(--text-color, #111827); }
+.toast-error   { color: var(--text-color, #111827); }
+.toast-info    { color: var(--text-color, #111827); }
+
+/* 進場動畫 */
+@keyframes toast-enter {
+  from { opacity: 0; transform: translate(-50%, -6px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast { animation: none; }
+}
+
+
 /* 響應式設計 */
 @media (max-width: 768px) {
   .btn {
@@ -499,6 +563,8 @@ body {
     max-width: 85%;
   }
 }
+
+
 
 /* 深色模式 */
 @media (prefers-color-scheme: dark) {

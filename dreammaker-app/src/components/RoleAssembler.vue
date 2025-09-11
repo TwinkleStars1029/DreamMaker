@@ -2,7 +2,10 @@
   <div class="role-builder space-y-6" @keydown="onGlobalKeydown">
     <!-- 頁首 + 流程步驟條 -->
     <div class="page-header">
-      <h2 class="page-title">✨ 角色建立（流程）</h2>
+      <h2 class="page-title">
+        <span v-if="editingRoleId">✏️ 編輯角色（流程）</span>
+        <span v-else>✨ 角色建立（流程）</span>
+      </h2>
       <div class="flex gap-2 items-center">
         <button v-if="!isCreatingRole" @click="startNewRole" type="button" class="btn btn-accent floating">✨ 新增角色</button>
         <button v-else @click="cancelCreateRole" type="button" class="btn btn-outline">❌ 取消</button>
@@ -225,10 +228,11 @@ import { useAppStore } from '../stores/useAppStore'
 import type { Module, Role } from '../types'
 
 const store = useAppStore()
-const { modules, roles, createRole, deleteRole } = store
+const { modules, roles, createRole, updateRole, deleteRole } = store
 
 // ---------- 狀態 ----------
 const isCreatingRole = ref(false)
+const editingRoleId = ref<string | null>(null) // 新增：編輯中的角色 ID
 const currentStep = ref<1|2|3>(1)
 const submitting = ref(false)
 
@@ -330,11 +334,31 @@ function goNext(){
 function goBack(){ if(currentStep.value>1) currentStep.value-- }
 
 // ---------- CRUD ----------
-function startNewRole() { isCreatingRole.value = true; currentStep.value = 1; roleName.value = ''; roleDescription.value = ''; Object.keys(selectedModules).forEach(k => (selectedModules[k as keyof typeof selectedModules] = null)); loadDraft(); focusName() }
+function startNewRole() { 
+  isCreatingRole.value = true; 
+  editingRoleId.value = null; // 新增角色時清除編輯 ID
+  currentStep.value = 1; 
+  roleName.value = ''; 
+  roleDescription.value = ''; 
+  Object.keys(selectedModules).forEach(k => (selectedModules[k as keyof typeof selectedModules] = null)); 
+  loadDraft(); 
+  focusName() 
+}
 
 function editRole(role: Role) {
-  isCreatingRole.value = true; currentStep.value = 1; roleName.value = role.name || ''; roleDescription.value = role.description || ''; Object.keys(selectedModules).forEach(k => (selectedModules[k as keyof typeof selectedModules] = null))
-  if (role.notes?.includes('模組拼裝:')) { const moduleIds = role.notes.split('模組拼裝: ')[1]?.split(',') || []; moduleIds.forEach(id => { const m = modules.find(x => x.id === id); if (m) selectModule(m) }) }
+  isCreatingRole.value = true; 
+  editingRoleId.value = role.id; // 設置編輯中的角色 ID
+  currentStep.value = 1; 
+  roleName.value = role.name || ''; 
+  roleDescription.value = role.description || ''; 
+  Object.keys(selectedModules).forEach(k => (selectedModules[k as keyof typeof selectedModules] = null))
+  if (role.notes?.includes('模組拼裝:')) { 
+    const moduleIds = role.notes.split('模組拼裝: ')[1]?.split(',') || []; 
+    moduleIds.forEach(id => { 
+      const m = modules.find(x => x.id === id); 
+      if (m) selectModule(m) 
+    }) 
+  }
   focusName()
 }
 
@@ -343,16 +367,59 @@ async function saveRole() {
   try {
     const moduleIds = Object.values(selectedModules).filter(Boolean).map(m => (m as Module).id)
     const tags = Object.values(selectedModules).filter(Boolean).map(m => (m as Module).type)
-    await Promise.resolve(createRole({ name: roleName.value.trim(), description: roleDescription.value.trim() || '由模組拼裝而成的角色', tags, notes: `模組拼裝: ${moduleIds.join(',')}` }))
-    toast('已儲存角色', 'success'); clearDraft(); cancelCreateRole()
-  } catch (e) { console.error(e); toast('儲存失敗，稍後再試', 'error') } finally { submitting.value = false }
+    const roleData = { 
+      name: roleName.value.trim(), 
+      description: roleDescription.value.trim() || '由模組拼裝而成的角色', 
+      tags, 
+      notes: `模組拼裝: ${moduleIds.join(',')}` 
+    }
+    
+    if (editingRoleId.value) {
+      // 編輯模式：更新現有角色
+      await Promise.resolve(updateRole(editingRoleId.value, roleData))
+      toast('已更新角色', 'success')
+    } else {
+      // 新增模式：創建新角色
+      await Promise.resolve(createRole(roleData))
+      toast('已儲存角色', 'success')
+    }
+    
+    clearDraft(); cancelCreateRole()
+  } catch (e) { 
+    console.error(e); 
+    toast('儲存失敗，稍後再試', 'error') 
+  } finally { 
+    submitting.value = false 
+  }
 }
 
 function confirmDelete(id: string, name: string) { confirm.visible = true; confirm.id = id; confirm.name = name }
 
-async function handleDeleteRole(id: string | null) { if (!id) return; submitting.value = true; try { await Promise.resolve(deleteRole(id)); toast('已刪除角色', 'success') } catch (e) { console.error(e); toast('刪除失敗，稍後再試', 'error') } finally { submitting.value = false; confirm.visible = false } }
+async function handleDeleteRole(id: string | null) { 
+  if (!id) return; 
+  submitting.value = true; 
+  try { 
+    await Promise.resolve(deleteRole(id)); 
+    // 強制觸發響應式更新
+    await nextTick()
+    toast('已刪除角色', 'success') 
+  } catch (e) { 
+    console.error(e); 
+    toast('刪除失敗，稍後再試', 'error') 
+  } finally { 
+    submitting.value = false; 
+    confirm.visible = false 
+  } 
+}
 
-function cancelCreateRole() { isCreatingRole.value = false; roleName.value = ''; roleDescription.value = ''; currentStep.value = 1; Object.keys(selectedModules).forEach(k => (selectedModules[k as keyof typeof selectedModules] = null)) }
+function cancelCreateRole() { 
+  isCreatingRole.value = false; 
+  editingRoleId.value = null; // 清除編輯狀態
+  roleName.value = ''; 
+  roleDescription.value = ''; 
+  currentStep.value = 1; 
+  Object.keys(selectedModules).forEach(k => (selectedModules[k as keyof typeof selectedModules] = null)) 
+}
 
 // 刪除確認對話框狀態
 const confirm = reactive<{ visible: boolean; id: string | null; name: string }>({ visible: false, id: null, name: '' })
@@ -424,8 +491,4 @@ const confirm = reactive<{ visible: boolean; id: string | null; name: string }>(
 .modal-actions{ display:flex; justify-content:flex-end; gap:.75rem; }
 .btn-danger{ background:#dc2626; color:#fff; border:1px solid #dc2626; }
 .btn-danger:hover{ filter:brightness(.95); }
-.toast{ position:fixed; right:1rem; bottom:1rem; padding:.75rem 1rem; border-radius:.75rem; box-shadow:var(--shadow-md); margin-top:.5rem; z-index:60; background:#fff; }
-.toast-success{ border-left:4px solid #16a34a; }
-.toast-error{ border-left:4px solid #dc2626; }
-.toast-info{ border-left:4px solid #3b82f6; }
 </style>
