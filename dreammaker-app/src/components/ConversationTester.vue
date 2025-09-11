@@ -22,41 +22,49 @@
       </div>
     </div>
 
-    <!-- 角色選擇 -->
-    <section class="modern-card glass">
-      <h3 class="form-title mb-4">🎭 選擇對話角色</h3>
+    <!-- 角色選擇 + Prompt 預覽（新：下拉 + 可摺疊區） -->
+    <section class="modern-card glass space-y-4">
+      <h3 class="form-title">🎭 選擇對話角色</h3>
 
-      <div v-if="roles.length > 0" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <article
-          v-for="role in roles"
-          :key="role.id"
-          @click="selectRole(role)"
-          :class="[
-            'modern-card',
-            'role-option',
-            selectedRole?.id === role.id ? 'role-option--selected' : ''
-          ]"
-          role="button"
-          tabindex="0"
-          @keyup.enter="selectRole(role)"
+      <div v-if="roles.length > 0" class="flex items-center gap-3">
+        <select
+          class="input w-full md:max-w-md"
+          :value="selectedRole?.id || ''"
+          @change="onSelectRoleId(($event.target as HTMLSelectElement).value)"
         >
-          <div class="flex items-start gap-4">
-            <div class="avatar avatar-lg">
-              <span>{{ role.name.charAt(0).toUpperCase() }}</span>
-            </div>
-            <div class="flex-1 min-w-0">
-              <h4 class="role-option__title">{{ role.name }}</h4>
-              <p class="role-option__desc">
-                {{ role.description }}
-              </p>
-              <div v-if="role.tags?.length" class="flex flex-wrap gap-2 mt-3">
-                <span v-for="tag in role.tags" :key="tag" class="tag tag-primary">
-                  {{ tag }}
-                </span>
-              </div>
-            </div>
-          </div>
-        </article>
+          <option value="" disabled>請選擇角色</option>
+          <option v-for="role in roles" :key="role.id" :value="role.id">
+            {{ role.name }}
+          </option>
+        </select>
+
+        <button
+          type="button"
+          class="btn btn-outline"
+          :disabled="!selectedRole"
+          @click="startNewConversation"
+          title="以目前角色開始新對話"
+        >
+          ➕ 新對話
+        </button>
+      </div>
+
+      <!-- AI 供應商選擇 -->
+      <div v-if="selectedRole" class="flex items-center gap-3">
+        <select
+          class="input w-full md:max-w-md"
+          :value="selectedProvider?.id || ''"
+          @change="onSelectProviderId(($event.target as HTMLSelectElement).value)"
+        >
+          <option value="" disabled>請選擇 AI 供應商</option>
+          <option v-for="provider in activeProviders" :key="provider.id" :value="provider.id">
+            {{ provider.name }} ({{ provider.provider }} - {{ provider.model }})
+          </option>
+          <option value="mock" :disabled="activeProviders.length > 0">🧪 模擬模式</option>
+        </select>
+        <div v-if="selectedProvider" class="text-xs text-gray-500">
+          {{ selectedProvider.isActive ? '✅ 已啟用' : '❌ 未啟用' }}
+        </div>
       </div>
 
       <div v-else class="empty-state">
@@ -66,19 +74,61 @@
           <p class="empty-state-subtext">請先到「角色建立」頁面建立角色</p>
           <button
             type="button"
-            @click="$emit('navigate', 'roles')"
+            @click="emit('navigate','roles')"
             class="btn btn-primary shimmer-soft"
           >
             ✨ 前往角色建立
           </button>
         </div>
       </div>
+
+      <p v-if="selectedRole" class="text-sm" style="color: var(--subtext-color);">
+        {{ selectedRole.description }}
+      </p>
+
+      <!-- Prompt 預覽（可摺疊） -->
+      <div class="prompt-preview card-soft" v-if="selectedRole">
+        <div class="prompt-preview__header">
+          <div class="flex items-center gap-2">
+            <span>🧩 送進模型的 Prompt（即時預覽）</span>
+            <span class="prompt-meta">
+              {{ promptCharCount }} 字 ≈ {{ approxTokens }} tokens
+            </span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="btn btn-ghost"
+              @click="copyPrompt"
+              :disabled="!promptPreview"
+              title="複製 Prompt 內容"
+            >
+              📋 複製
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              @click="isPromptOpen = !isPromptOpen"
+              :aria-expanded="isPromptOpen"
+            >
+              {{ isPromptOpen ? '收合' : '展開' }}
+            </button>
+          </div>
+        </div>
+
+        <transition name="fade">
+          <pre
+            v-if="isPromptOpen"
+            class="prompt-preview__content"
+          >{{ promptPreview }}</pre>
+        </transition>
+      </div>
     </section>
 
     <!-- 對話區域 -->
     <section v-if="selectedRole" class="modern-card rounded-2xl overflow-hidden">
       <!-- 對話標題 -->
-      <div class="flex items-center justify-between" style="padding: var(--spacing-lg); border-bottom: 1px solid var(--border-light);">
+        <div class="flex items-center justify-between" style="padding: var(--spacing-lg); border-bottom: 1px solid var(--border-light);">
         <div class="flex items-center gap-4">
           <div class="avatar avatar-lg avatar-accent">
             <span>{{ selectedRole.name.charAt(0).toUpperCase() }}</span>
@@ -86,6 +136,12 @@
           <div>
             <h3 class="form-title">{{ selectedRole.name }}</h3>
             <p class="text-sm" style="color: var(--subtext-color);">{{ selectedRole.description }}</p>
+            <div v-if="selectedProvider" class="text-xs mt-1" style="color: var(--subtext-color);">
+              🤖 {{ selectedProvider.name }} ({{ selectedProvider.provider }} - {{ selectedProvider.model }})
+            </div>
+            <div v-else class="text-xs mt-1" style="color: var(--subtext-color);">
+              🧪 模擬模式
+            </div>
           </div>
         </div>
         <div class="flex gap-2">
@@ -220,10 +276,13 @@ import { useAppStore } from '../stores/useAppStore'
 import { aiService, mockAiService } from '../services/aiService'
 import type { Role, Module, Conversation, Message } from '../types'
 
+const emit = defineEmits<{(e:'navigate', to:'roles'|string):void}>()
+
 const store = useAppStore()
 const { roles, modules, conversations, createConversation, updateConversation,  deleteConversation: removeConversation } = store
 
 const selectedRole = ref<Role | null>(null)
+const selectedProvider = ref<ProviderConfig | null>(null)
 const currentConversation = ref<Conversation | null>(null)
 const currentMessages = ref<Message[]>([])
 const newMessage = ref('')
@@ -231,12 +290,60 @@ const isLoading = ref(false)
 const showSaveDialog = ref(false)
 const saveForm = reactive({ title: '' })
 
+// ===== 新增：Prompt 預覽相關 =====
+const isPromptOpen = ref(true)
+const promptPartsComputed = computed(() => buildRolePrompt())
+const promptPreview = computed(() => (promptPartsComputed.value || []).join('\n\n'))
+const promptCharCount = computed(() => promptPreview.value.length)
+// 粗估 tokens（保守）：字數 / 2
+const approxTokens = computed(() => Math.max(1, Math.ceil(promptCharCount.value / 2)))
+
+const copyPrompt = async () => {
+  if (!promptPreview.value) return
+  try {
+    await navigator.clipboard.writeText(promptPreview.value)
+    console.info('Prompt 已複製')
+  } catch {
+    alert('複製失敗，請手動選取文字複製')
+  }
+}
+
+// ===== 新增：供應商相關計算屬性 =====
+const activeProviders = computed(() => 
+  store.providerConfigs.filter(provider => provider.isActive)
+)
+
+// ===== 原本的條件：略微調整 canSend，要求必須選到角色 =====
 const canSave = computed(() => currentMessages.value.length > 0)
 const canSend = computed(() => !!newMessage.value.trim() && !isLoading.value && !!selectedRole.value)
 const canRegenerate = computed(() =>
   currentMessages.value.length > 0 &&
   currentMessages.value[currentMessages.value.length - 1]?.role === 'assistant'
 )
+
+// 下拉選單選取角色
+const onSelectRoleId = (id: string) => {
+  const role = roles.find(r => r.id === id) || null
+  if (!role) return
+  if (selectedRole.value?.id !== role.id) {
+    selectedRole.value = role
+    currentConversation.value = null
+    currentMessages.value = []
+    newMessage.value = ''
+    // 你若希望每次切換角色時展開預覽，可解除下一行註解
+    // isPromptOpen.value = true
+  }
+}
+
+// 下拉選單選取供應商
+const onSelectProviderId = (id: string) => {
+  if (id === 'mock') {
+    selectedProvider.value = null
+    return
+  }
+  const provider = store.providerConfigs.find(p => p.id === id) || null
+  selectedProvider.value = provider
+}
 
 const selectRole = (role: Role) => {
   selectedRole.value = role
@@ -268,27 +375,21 @@ const sendMessage = async () => {
     const promptParts = buildRolePrompt()
 
     const settings = JSON.parse(localStorage.getItem('dreammaker-settings') || '{}')
-    const defaultProviderId = settings.defaultProvider
 
     let response
-    if (defaultProviderId && store.providerConfigs.length > 0) {
-      const providerConfig = store.providerConfigs.find(p => p.id === defaultProviderId)
-      if (providerConfig && providerConfig.isActive) {
-        response = await aiService.sendMessages({
-          provider: providerConfig.provider,
-          model: providerConfig.model,
-          apiKey: providerConfig.endpoint ? `${providerConfig.endpoint}|${providerConfig.apiKey}` : providerConfig.apiKey,
-          promptParts,
-          messages: currentMessages.value.map(msg => ({ role: msg.role, content: msg.content })),
-          params: {
-            temperature: settings.defaultTemperature || providerConfig.params.temperature || 0.7,
-            maxTokens: settings.defaultMaxTokens || providerConfig.params.maxTokens || 1000,
-            topP: providerConfig.params.topP || 1,
-          }
-        })
-      } else {
-        throw new Error('預設供應商不可用，使用模擬服務')
-      }
+    if (selectedProvider.value && selectedProvider.value.isActive) {
+      response = await aiService.sendMessages({
+        provider: selectedProvider.value.provider,
+        model: selectedProvider.value.model,
+        apiKey: selectedProvider.value.endpoint ? `${selectedProvider.value.endpoint}|${selectedProvider.value.apiKey}` : selectedProvider.value.apiKey,
+        promptParts,
+        messages: currentMessages.value.map(msg => ({ role: msg.role, content: msg.content })),
+        params: {
+          temperature: settings.defaultTemperature || selectedProvider.value.params.temperature || 0.7,
+          maxTokens: settings.defaultMaxTokens || selectedProvider.value.params.maxTokens || 1000,
+          topP: selectedProvider.value.params.topP || 1,
+        }
+      })
     } else {
       response = await mockAiService.sendMessages({
         provider: 'gemini',
@@ -338,27 +439,21 @@ const regenerateLastResponse = async () => {
     const promptParts = buildRolePrompt()
 
     const settings = JSON.parse(localStorage.getItem('dreammaker-settings') || '{}')
-    const defaultProviderId = settings.defaultProvider
 
     let response
-    if (defaultProviderId && store.providerConfigs.length > 0) {
-      const providerConfig = store.providerConfigs.find(p => p.id === defaultProviderId)
-      if (providerConfig && providerConfig.isActive) {
-        response = await aiService.sendMessages({
-          provider: providerConfig.provider,
-          model: providerConfig.model,
-          apiKey: providerConfig.endpoint ? `${providerConfig.endpoint}|${providerConfig.apiKey}` : providerConfig.apiKey,
-          promptParts,
-          messages: currentMessages.value.map(msg => ({ role: msg.role, content: msg.content })),
-          params: {
-            temperature: (settings.defaultTemperature || providerConfig.params.temperature || 0.7) + 0.1,
-            maxTokens: settings.defaultMaxTokens || providerConfig.params.maxTokens || 1000,
-            topP: providerConfig.params.topP || 1,
-          }
-        })
-      } else {
-        throw new Error('預設供應商不可用，使用模擬服務')
-      }
+    if (selectedProvider.value && selectedProvider.value.isActive) {
+      response = await aiService.sendMessages({
+        provider: selectedProvider.value.provider,
+        model: selectedProvider.value.model,
+        apiKey: selectedProvider.value.endpoint ? `${selectedProvider.value.endpoint}|${selectedProvider.value.apiKey}` : selectedProvider.value.apiKey,
+        promptParts,
+        messages: currentMessages.value.map(msg => ({ role: msg.role, content: msg.content })),
+        params: {
+          temperature: (settings.defaultTemperature || selectedProvider.value.params.temperature || 0.7) + 0.1,
+          maxTokens: settings.defaultMaxTokens || selectedProvider.value.params.maxTokens || 1000,
+          topP: selectedProvider.value.params.topP || 1,
+        }
+      })
     } else {
       response = await mockAiService.sendMessages({
         provider: 'gemini',
@@ -474,6 +569,11 @@ const formatTime = (dateString: string) =>
 
 onMounted(() => {
   if (roles.length > 0 && !selectedRole.value) selectRole(roles[0])
+  
+  // 設定預設供應商
+  if (activeProviders.value.length > 0 && !selectedProvider.value) {
+    selectedProvider.value = activeProviders.value[0]
+  }
 })
 </script>
 
@@ -491,22 +591,6 @@ onMounted(() => {
   color: var(--text-color);
   background: var(--gradient-warm);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-}
-
-/* 角色選項卡片 */
-.role-option{ cursor:pointer; transition: transform var(--transition-fast), box-shadow var(--transition-fast); }
-.role-option:hover{ transform: translateY(-2px); }
-.role-option--selected{
-  border-color: var(--button-bg-color);
-  box-shadow: 0 0 0 3px rgba(242,170,132,.15);
-  background: var(--gradient-soft);
-}
-.role-option__title{
-  margin:0; font-weight:600; color:var(--text-color); font-size:1rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-}
-.role-option__desc{
-  color:var(--subtext-color); font-size:.875rem; line-height:1.4; margin:.25rem 0 0 0;
-  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
 }
 
 /* 訊息區 */
@@ -543,4 +627,40 @@ onMounted(() => {
 /* 輔助動畫 */
 .float-animation{ animation: float 6s ease-in-out infinite; }
 @keyframes float { 0%,100%{ transform: translateY(0); } 50%{ transform: translateY(-6px); } }
+
+/* ===== 新增：Prompt 預覽外觀 ===== */
+.card-soft{
+  background: var(--surface-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+}
+.prompt-preview{ overflow: hidden; }
+.prompt-preview__header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid var(--border-light);
+  background: var(--surface-elevated);
+}
+.prompt-preview__content{
+  margin:0;
+  padding: var(--spacing-md);
+  max-height: 18rem;
+  overflow: auto;
+  font-size: .875rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: var(--surface-card);
+}
+.prompt-meta{
+  font-size: .75rem;
+  color: var(--subtext-color);
+  background: var(--surface-card);
+  border: 1px dashed var(--border-light);
+  border-radius: 999px;
+  padding: .125rem .5rem;
+}
+/* 淡入淡出 */
+.fade-enter-active, .fade-leave-active { transition: opacity .2s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>

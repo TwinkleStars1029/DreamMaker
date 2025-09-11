@@ -187,19 +187,20 @@ body {
 
 .btn-accent:hover:not(:disabled) {
   background: var(--button-hover-bg-color);
+  color: var(--button-text-color);
   transform: translateY(-2px);
   box-shadow: 0 8px 20px 0 rgba(232, 192, 153, 0.45);
 }
 
 .btn-outline {
-  background: transparent;
-  color: var(--button-bg-color);
+  background: var(--button-bg-color);
+  color: var(--button-text-color);
   border: 2px solid var(--button-bg-color);
   backdrop-filter: blur(10px);
 }
 
 .btn-outline:hover:not(:disabled) {
-  background: var(--button-bg-color);
+  background: var(--button-hover-bg-color);
   color: var(--button-text-color);
   transform: translateY(-1px);
 }
