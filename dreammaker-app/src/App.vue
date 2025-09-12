@@ -165,17 +165,12 @@ const handleNavigate = (page: string) => {
 .app-title {
   font-size: 2rem;
   font-weight: 700;
-  background: var(--gradient-button);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  text-shadow: 0 2px 4px rgba(242, 170, 132, 0.3);
-  transition: all var(--transition-normal);
+  background: var(--gradient-warm);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
 
 .app-title:hover {
   transform: scale(1.02);
-  filter: drop-shadow(0 4px 8px rgba(242, 170, 132, 0.4));
 }
 
 .nav-container {

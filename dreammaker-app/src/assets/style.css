@@ -12,7 +12,7 @@
   --button-bg-color: #F2AA84; 
   --button-hover-bg-color: #e99a70;
   --button-text-color: #FFFFFF; 
-  --subtext-color: #747474; 
+  --subtext-color: #616161; 
   --el-color-primary: var(--primary-color);
   --background-gradient: linear-gradient(180deg, var(--primary-color), var(--accent-color));
   --line-color: rgba(255, 119, 180, 0.2);
@@ -22,8 +22,8 @@
   --bg-primary: var(--background-gradient);
   --bg-secondary: #FFFFFF;
   --bg-tertiary: var(--neutral-50);
-  --surface-elevated: rgba(255, 255, 255, 0.9);
-  --surface-card: rgba(255, 255, 255, 0.7);
+  --surface-elevated: rgba(255, 255, 255, 1);
+  --surface-card: rgba(255, 255, 255, 0.9);
   --surface-glass: rgba(216, 227, 231, 0.3);
   
   /* 漸層系統 */
@@ -38,6 +38,7 @@
   --border-medium: rgba(116, 116, 116, 0.25);
   --border-accent: var(--line-color);
   --border-primary: rgba(216, 227, 231, 0.8);
+  --border-selected: #f58b53;
   
   /* 陰影系統（溫暖色調） */
   --shadow-xs: 0 1px 2px 0 rgba(116, 116, 116, 0.08);
@@ -87,13 +88,19 @@ body {
   border: 1px solid var(--border-light);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
-  transition: all var(--transition-normal);
   padding: var(--spacing-lg);
+  margin-top: 0.125rem;
+}
+
+/* 被選取的卡片樣式 */
+.modern-card.selected {
+  border: 2px solid var(--border-selected);
+  box-shadow: var(--border-selected);
+  background:  #ffffff; /* 可以用變數或固定顏色 */
 }
 
 .modern-card:hover {
   box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
   border-color: var(--border-accent);
   background: var(--surface-elevated);
 }
@@ -113,6 +120,49 @@ body {
   backdrop-filter: blur(15px);
   border: 1px solid var(--border-accent);
 }
+
+/* 選項卡片設計 */
+.item-card {
+  background: var(--surface-card);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--spacing-lg);
+  margin-top: 0.125rem;
+}
+
+/* 被選取的卡片樣式 */
+.item-card.selected {
+  border: 2px solid var(--border-selected);
+  box-shadow: var(--border-selected);
+  background:  #ffffff; /* 可以用變數或固定顏色 */
+  transform: translateY(-3px);
+}
+
+.item-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  border-color: var(--border-accent);
+  background: var(--surface-elevated);
+}
+
+.item-card.primary {
+  background: var(--gradient-primary);
+  border: 1px solid var(--border-primary);
+}
+
+.item-card.accent {
+  background: var(--gradient-accent);
+  border: 1px solid var(--accent-dark);
+}
+
+.item-card.glass {
+  background: var(--surface-glass);
+  backdrop-filter: blur(15px);
+  border: 1px solid var(--border-accent);
+}
+
 
 /* 現代按鈕系統（圓角設計） */
 .btn {
@@ -232,7 +282,7 @@ body {
 
 /* 現代輸入框 */
 .input {
-  width: 100%;
+  width: 90%;
   padding: 0.875rem 1.25rem;
   border: 2px solid var(--border-light);
   border-radius: var(--radius-full);
@@ -320,6 +370,20 @@ body {
   color: #1e40af;
   border: 1px solid var(--info-color);
 }
+
+/* 列表卡片上的動作按鈕，沿用你的風格 */
+.action-btn{
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-size: .875rem; font-weight: 500;
+  cursor: pointer; transition: all var(--transition-fast);
+  border: none;  
+}
+.action-btn-edit{  background: transparent; border: 1px solid var(--button-bg-color); color: var(--button-bg-color); }
+.action-btn-edit:hover{ background: var(--button-bg-color); color: var(--button-text-color); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.action-btn-delete{ background: transparent; color: #dc2626; border: 1px solid #dc2626; }
+.action-btn-delete:hover{ background: #dc2626; color: #fff; transform: translateY(-1px);}
+
 
 /* 現代頭像 */
 .avatar {
@@ -590,4 +654,15 @@ body {
     background: var(--surface-card);
     color: var(--text-color);
   }
+}
+
+/* 頁首（沿用 tokens） */
+.page-header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding-bottom: var(--spacing-lg);
+  border-bottom: 1px solid var(--border-light);
+}
+.page-title{
+  font-size: 1.5rem; font-weight: 700; margin: 0;
+  color: var(--text-color);
 }

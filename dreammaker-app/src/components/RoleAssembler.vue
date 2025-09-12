@@ -3,12 +3,12 @@
     <!-- 頁首 + 流程步驟條 -->
     <div class="page-header">
       <h2 class="page-title">
-        <span v-if="editingRoleId">✏️ 編輯角色（流程）</span>
-        <span v-else>✨ 角色建立（流程）</span>
+        <span v-if="editingRoleId">編輯角色</span>
+        <span v-else> 角色建立</span>
       </h2>
       <div class="flex gap-2 items-center">
-        <button v-if="!isCreatingRole" @click="startNewRole" type="button" class="btn btn-accent floating">✨ 新增角色</button>
-        <button v-else @click="cancelCreateRole" type="button" class="btn btn-outline">❌ 取消</button>
+        <button v-if="!isCreatingRole" @click="startNewRole" type="button" class="btn btn-accent floating">新增角色</button>
+        <button v-else @click="cancelCreateRole" type="button" class="btn btn-outline">取消</button>
       </div>
     </div>
 
@@ -31,7 +31,7 @@
       <h3 class="form-title mb-6">🎭 角色基本資訊</h3>
       <div class="space-y-6">
         <div>
-          <label class="form-label" for="role-name">✨ 角色名稱 *</label>
+          <label class="form-label" for="role-name">角色名稱 *</label>
           <input
             id="role-name"
             ref="nameInput"
@@ -46,7 +46,7 @@
           <small v-if="errors.name" id="err-name" role="alert" class="mt-1 block text-xs" style="color:#e05252">{{ errors.name }}</small>
         </div>
         <div>
-          <label class="form-label" for="role-desc">📝 角色描述</label>
+          <label class="form-label" for="role-desc">角色描述</label>
           <textarea id="role-desc" v-model.trim="roleDescription" class="input textarea w-full" rows="3" placeholder="簡短描述這個角色的特點"></textarea>
         </div>
       </div>
@@ -61,7 +61,7 @@
     <section v-if="isCreatingRole && currentStep===2" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
       <!-- 左：模組庫 -->
       <div class="space-y-6">
-        <h3 class="form-title">🧩 選擇模組（至少選 1 項）</h3>
+        <h3 class="form-title">選擇模組（至少選 1 項）</h3>
         <div v-for="moduleType in moduleTypes" :key="moduleType.value" class="space-y-3">
           <h4 class="section-title flex items-center">
             <span class="mr-2" aria-hidden="true">{{ getModuleTypeIcon(moduleType.value) }}</span>
@@ -77,7 +77,7 @@
               tabindex="0"
               role="option"
               :aria-selected="selectedModules[moduleType.value]?.id === module.id"
-              :class="['modern-card hoverable cursor-pointer', selectedModules[moduleType.value]?.id === module.id ? 'selected' : '']"
+              :class="['item-card hoverable cursor-pointer', selectedModules[moduleType.value]?.id === module.id ? 'selected' : '']"
             >
               <div class="flex items-start gap-3">
                 <div :class="['dot', getModuleTypeTone(module.type)]" aria-hidden="true"></div>
@@ -96,26 +96,26 @@
 
       <!-- 右：當前配置 -->
       <div class="space-y-6">
-        <h3 class="form-title">⚙️ 當前配置</h3>
+        <h3 class="form-title">當前配置</h3>
         <div class="modern-card">
           <div class="space-y-4">
             <div v-if="selectedModules.basic" class="config-block info">
-              <h5 class="config-title">👤 基本資訊</h5>
+              <h5 class="config-title">基本資訊</h5>
               <p class="config-text">{{ selectedModules.basic.content }}</p>
             </div>
             <div v-if="selectedModules.persona" class="config-block warn">
-              <h5 class="config-title">💫 性格特徵</h5>
+              <h5 class="config-title">性格特徵</h5>
               <p class="config-text mb-2">{{ selectedModules.persona.content }}</p>
               <div v-if="selectedModules.persona.toneHints?.length" class="flex flex-wrap gap-2">
                 <span v-for="(hint, i) in selectedModules.persona.toneHints" :key="i" class="tag tag-primary text-xs">{{ hint }}</span>
               </div>
             </div>
             <div v-if="selectedModules.background" class="config-block success">
-              <h5 class="config-title">📚 背景故事</h5>
+              <h5 class="config-title">背景故事</h5>
               <p class="config-text">{{ selectedModules.background.content }}</p>
             </div>
             <div v-if="selectedModules.instruction" class="config-block danger">
-              <h5 class="config-title">🎯 指令片段</h5>
+              <h5 class="config-title">指令片段</h5>
               <p class="config-text">{{ selectedModules.instruction.content }}</p>
             </div>
           </div>
@@ -131,25 +131,25 @@
     <!-- 步驟 3：預覽 + 儲存 -->
     <section v-if="isCreatingRole && currentStep===3" class="space-y-6">
       <div class="modern-card glass">
-        <h3 class="form-title mb-4">✨ 角色預覽</h3>
+        <h3 class="form-title mb-4">角色預覽</h3>
         <div class="space-y-4">
           <div v-if="selectedModules.basic" class="preview-block info">
-            <h5 class="preview-title">👤 基本資訊</h5>
+            <h5 class="preview-title">基本資訊</h5>
             <p class="preview-text">{{ selectedModules.basic.content }}</p>
           </div>
           <div v-if="selectedModules.persona" class="preview-block warn">
-            <h5 class="preview-title">💫 性格特徵</h5>
+            <h5 class="preview-title">性格特徵</h5>
             <p class="preview-text mb-2">{{ selectedModules.persona.content }}</p>
             <div v-if="selectedModules.persona.toneHints?.length" class="flex flex-wrap gap-2">
               <span v-for="(hint, i) in selectedModules.persona.toneHints" :key="i" class="tag tag-primary text-xs">{{ hint }}</span>
             </div>
           </div>
           <div v-if="selectedModules.background" class="preview-block success">
-            <h5 class="preview-title">📚 背景故事</h5>
+            <h5 class="preview-title">背景故事</h5>
             <p class="preview-text">{{ selectedModules.background.content }}</p>
           </div>
           <div v-if="selectedModules.instruction" class="preview-block danger">
-            <h5 class="preview-title">🎯 指令片段</h5>
+            <h5 class="preview-title">指令片段</h5>
             <p class="preview-text">{{ selectedModules.instruction.content }}</p>
           </div>
         </div>
@@ -167,8 +167,8 @@
 
     <!-- 列表區（非建立流程時顯示） -->
     <section v-if="!isCreatingRole" class="space-y-6">
-      <div v-if="roles.length > 0" class="modern-card glass">
-        <h3 class="form-title mb-6">🌟 已建立的角色</h3>
+      <div v-if="roles.length > 0" class="modern-card">
+        <h3 class="form-title mb-6">已建立的角色</h3>
         <div class="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           <article v-for="role in roles" :key="role.id" class="modern-card role-card hoverable">
             <div class="flex items-start gap-4">
@@ -182,8 +182,8 @@
               </div>
             </div>
             <div class="mt-4 flex justify-end gap-2">
-              <button type="button" @click="editRole(role)" class="action-btn action-btn-edit">✏️ 編輯</button>
-              <button type="button" @click="confirmDelete(role.id, role.name)" class="action-btn action-btn-delete">🗑️ 刪除</button>
+              <button type="button" @click="editRole(role)" class="action-btn action-btn-edit">編輯</button>
+              <button type="button" @click="confirmDelete(role.id, role.name)" class="action-btn action-btn-delete">刪除</button>
             </div>
           </article>
         </div>
@@ -193,7 +193,7 @@
           <div class="empty-state-icon float-animation" style="font-size:3rem;" aria-hidden="true">✨</div>
           <h3 class="empty-state-text">還沒有建立任何角色</h3>
           <p class="empty-state-subtext">點擊「新增角色」開始建立你的第一個 AI 角色</p>
-          <button type="button" @click="startNewRole" class="btn btn-primary shimmer-soft">✨ 開始建立</button>
+          <button type="button" @click="startNewRole" class="btn btn-primary shimmer-soft">開始建立</button>
         </div>
       </div>
     </section>
@@ -440,9 +440,6 @@ const confirm = reactive<{ visible: boolean; id: string | null; name: string }>(
 .step.done .step-index{ background:var(--button-bg-color); color:#fff; border-color:transparent; }
 .step-label{ font-weight:600; font-size:.95rem; }
 
-/* 頁首 */
-.page-header{ display:flex; justify-content:space-between; align-items:center; padding-bottom: var(--spacing-lg); border-bottom: 1px solid var(--border-light); }
-.page-title{ margin:0; font-size:1.75rem; font-weight:700; color: var(--text-color); background: var(--gradient-warm); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 
 /* Wizard actions */
 .wizard-actions{ display:flex; justify-content:flex-end; gap:.75rem; margin-top:1rem; }

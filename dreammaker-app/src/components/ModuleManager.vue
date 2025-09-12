@@ -112,7 +112,7 @@
       <article
         v-for="module in filteredModules"
         :key="module.id"
-        class="modern-card"
+        class="item-card"
       >
         <header class="mb-3 flex items-start justify-between">
           <div class="flex items-center gap-2">
@@ -284,18 +284,7 @@ function resetForm() {
 <style scoped>
 .module-manager { padding: var(--spacing-lg); }
 
-/* 頁首 */
-.page-header{
-  display:flex; align-items:center; justify-content:space-between;
-  padding-bottom: var(--spacing-lg);
-  border-bottom: 1px solid var(--border-light);
-}
-.page-title{
-  font-size: 1.5rem; font-weight: 700; margin: 0;
-  color: var(--text-color);
-  background: var(--gradient-warm);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-}
+
 
 
 /* 表單區域（沿用 modern-card 結構） */
@@ -316,19 +305,7 @@ function resetForm() {
 /* 文章卡片補充（.modern-card 已提供底色/陰影） */
 .text-body { color: var(--subtext-color); }
 
-/* 列表卡片上的動作按鈕，沿用你的風格 */
-.action-btn{
-  padding: var(--spacing-xs) var(--spacing-md);
-  border-radius: var(--radius-md);
-  font-size: .875rem; font-weight: 500;
-  cursor: pointer; transition: all var(--transition-fast);
-  border: none;
-  
-}
-.action-btn-edit{ background: var(--primary-color); color: var(--text-color); }
-.action-btn-edit:hover{ background: var(--button-bg-color); color: var(--button-text-color); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
-.action-btn-delete{ background: transparent; color: #dc2626; border: 1px solid #dc2626; }
-.action-btn-delete:hover{ background: #dc2626; color: #fff; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(220,38,38,.25); }
+
 
 /* 空狀態樣式覆用全站 tokens（與 Role 版一致） */
 .empty-state{ display:flex; justify-content:center; align-items:center; min-height: 320px; }

@@ -6,7 +6,7 @@
     </div>
 
     <!-- AI 供應商設定 -->
-    <section class="modern-card glass">
+    <section class="modern-card">
       <div class="flex items-center justify-between mb-4">
         <h3 class="form-title">AI 供應商設定</h3>
         <button
@@ -134,7 +134,7 @@
 
     <!-- 新增/編輯供應商對話框 -->
     <div v-if="showAddProviderDialog || editingProvider" class="modal-backdrop">
-      <div class="modern-card glass modal-card">
+      <div class="modern-card">
         <h3 class="form-title mb-4">{{ editingProvider ? '編輯供應商' : '新增供應商' }}</h3>
 
         <div class="space-y-4">
@@ -448,32 +448,12 @@ watch([defaultProvider, defaultTemperature, defaultMaxTokens], saveSettings)
 <style scoped>
 .settings { padding: var(--spacing-lg); }
 
-/* 頁首 */
-.page-header{
-  display:flex; align-items:center; justify-content:space-between;
-  padding-bottom: var(--spacing-lg); border-bottom: 1px solid var(--border-light);
-}
-.page-title{
-  margin:0; font-size:1.5rem; font-weight:700; color:var(--text-color);
-  background: var(--gradient-warm);
-  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
-}
 
 /* 列表內文樣式（沿用前頁一致） */
 .history-title{ margin:0; color:var(--text-color); font-weight:600; }
 .history-subtitle{ color:var(--subtext-color); font-size:.9rem; }
 
-/* Action Buttons（延續你的統一樣式） */
-.action-btn{
-  padding: var(--spacing-xs) var(--spacing-md);
-  border-radius: var(--radius-md);
-  font-size:.875rem; font-weight:500; transition: all var(--transition-fast);
-  border:none; cursor:pointer;
-}
-.action-btn-edit{ background: var(--gradient-primary); color: var(--text-color); }
-.action-btn-edit:hover{ background: var(--gradient-soft); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
-.action-btn-delete{ background: transparent; color:#dc2626; border:1px solid #dc2626; }
-.action-btn-delete:hover{ background:#dc2626; color:#fff; transform: translateY(-1px); box-shadow:0 4px 14px rgba(220,38,38,.25); }
+
 
 /* Modal */
 .modal-backdrop{

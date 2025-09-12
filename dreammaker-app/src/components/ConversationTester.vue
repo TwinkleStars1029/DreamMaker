@@ -248,7 +248,7 @@
       v-if="showSaveDialog"
       class="modal-backdrop"
     >
-      <div class="modern-card glass modal-card">
+      <div class="modern-card">
         <h3 class="form-title mb-4">儲存對話</h3>
         <div class="space-y-4">
           <div>
@@ -580,18 +580,6 @@ onMounted(() => {
 <style scoped>
 .conversation-tester { padding: var(--spacing-lg); }
 
-/* 頁首（沿用 tokens） */
-.page-header{
-  display:flex; align-items:center; justify-content:space-between;
-  padding-bottom: var(--spacing-lg);
-  border-bottom: 1px solid var(--border-light);
-}
-.page-title{
-  font-size: 1.5rem; font-weight: 700; margin: 0;
-  color: var(--text-color);
-  background: var(--gradient-warm);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-}
 
 /* 訊息區 */
 .messages-pane{
