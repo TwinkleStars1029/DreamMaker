@@ -282,7 +282,9 @@ function resetForm() {
 </script>
 
 <style scoped>
-.module-manager { padding: var(--spacing-lg); }
+.module-manager {   
+  text-align: center; 
+}
 
 
 

@@ -230,33 +230,13 @@ const handleNavigate = (page: string) => {
 /* 主內容區域 */
 .main-content {
   position: relative;
-  z-index: 10;
+  width: 100%;
   max-width: 1280px;
+  text-align: center; 
   margin: 0 auto;
-  padding: 1.5rem;
 }
 
-@media (min-width: 640px) {
-  .main-content {
-    padding: 1.5rem 1.5rem;
-  }
-}
 
-@media (min-width: 1024px) {
-  .main-content {
-    padding: 1.5rem 2rem;
-  }
-}
-
-.content-container {
-  padding: 1.5rem 0;
-}
-
-@media (min-width: 640px) {
-  .content-container {
-    padding: 1.5rem 0;
-  }
-}
 
 /* 開發中頁面樣式 */
 .development-placeholder {
@@ -325,9 +305,6 @@ const handleNavigate = (page: string) => {
     font-size: 0.8125rem;
   }
   
-  .main-content {
-    padding: 1rem;
-  }
   
   .placeholder-card {
     padding: 2rem;

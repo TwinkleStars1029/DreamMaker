@@ -83,6 +83,7 @@ body {
 
 /* 現代卡片設計 */
 .modern-card {
+  width: 90%;
   background: var(--surface-card);
   backdrop-filter: blur(10px);
   border: 1px solid var(--border-light);
@@ -123,6 +124,7 @@ body {
 
 /* 選項卡片設計 */
 .item-card {
+  width: 90%;
   background: var(--surface-card);
   backdrop-filter: blur(10px);
   border: 1px solid var(--border-light);

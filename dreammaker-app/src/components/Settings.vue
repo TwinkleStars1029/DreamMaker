@@ -23,50 +23,51 @@
         <article
           v-for="config in providerConfigs"
           :key="config.id"
-          class="modern-card"
+          class="modern-card provider-card"
         >
-          <div class="flex items-start justify-between gap-4">
-            <div class="flex-1">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="tag" :class="getProviderColor(config.provider)">
-                  {{ getProviderLabel(config.provider) }}
-                </span>
-                <h4 class="history-title">{{ config.name }}</h4>
-                <span class="history-subtitle">{{ config.model }}</span>
-                <span
-                  v-if="config.isActive"
-                  class="inline-block w-2 h-2 rounded-full"
-                  style="background:#22c55e"
-                  title="目前使用中"
-                ></span>
-              </div>
-              <p class="text-sm" style="color:var(--subtext-color); margin-top:.25rem;">
-                API Key: {{ maskApiKey(config.apiKey) }}
-                <span v-if="config.endpoint"> ｜ 端點: {{ config.endpoint }}</span>
-              </p>
+          <!-- 左側：供應商資訊 -->
+          <div class="provider-info">
+            <div class="info-header">
+              <span class="tag shrink-0" :class="getProviderColor(config.provider)">
+                {{ getProviderLabel(config.provider) }}
+              </span>
+              <h4 class="history-title truncate">{{ config.name }}</h4>
+              <span class="history-subtitle truncate sm:max-w-[40%]">{{ config.model }}</span>
+              <span
+                v-if="config.isActive"
+                class="status-dot"
+                title="目前使用中"
+              ></span>
             </div>
 
-            <div class="flex gap-2">
-              <button type="button" @click="editProvider(config)" class="action-btn action-btn-edit">編輯</button>
-              <button
-                type="button"
-                @click="testProvider(config)"
-                :disabled="isTesting"
-                class="btn btn-secondary btn-sm"
-              >
-                {{ isTesting ? '測試中...' : '測試' }}
-              </button>
-              <button
-                type="button"
-                @click="toggleProvider(config)"
-                class="btn btn-ghost btn-sm"
-              >
-                {{ config.isActive ? '停用' : '啟用' }}
-              </button>
-              <button type="button" @click="deleteProvider(config.id)" class="action-btn action-btn-delete">刪除</button>
-            </div>
+            <p class="info-meta">
+              API Key: <span class="mono">{{ maskApiKey(config.apiKey) }}</span>
+              <span v-if="config.endpoint"> ｜ 端點: <span class="break-anywhere">{{ config.endpoint }}</span></span>
+            </p>
+          </div>
+
+          <!-- 右側：操作按鈕 -->
+          <div class="provider-actions">
+            <button type="button" @click="editProvider(config)" class="action-btn action-btn-edit">編輯</button>
+            <button
+              type="button"
+              @click="testProvider(config)"
+              :disabled="isTesting"
+              class="action-btn action-btn-edit"
+            >
+              {{ isTesting ? '測試中...' : '測試' }}
+            </button>
+            <button
+              type="button"
+              @click="toggleProvider(config)"
+              class="action-btn action-btn-delete"
+            >
+              {{ config.isActive ? '停用' : '啟用' }}
+            </button>
+            <button type="button" @click="deleteProvider(config.id)" class="action-btn action-btn-delete">刪除</button>
           </div>
         </article>
+
 
         <div v-if="providerConfigs.length === 0" class="empty-state">
           <div class="empty-state-card">
@@ -461,4 +462,63 @@ watch([defaultProvider, defaultTemperature, defaultMaxTokens], saveSettings)
   display:flex; align-items:center; justify-content:center; z-index: 50;
 }
 .modal-card{ max-width: 720px; width: 100%; }
+
+/* 卡片以 Grid 佈局：左資訊，右操作；小螢幕改為上下堆疊 */
+.provider-card{
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  align-items: start;
+}
+@media (max-width: 640px){
+  .provider-card{
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 左側內容：標題列允許換行，但保持漂亮的間距 */
+.provider-info{
+  min-width: 0; /* 讓 truncate 生效 */
+}
+.info-header{
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .5rem .75rem;
+}
+
+/* 右側按鈕：可自動換行，不會把卡片撐寬 */
+.provider-actions{
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  justify-content: flex-end;
+}
+@media (max-width: 640px){
+  .provider-actions{
+    justify-content: flex-start;
+  }
+}
+
+/* 綠點修正：避免 inline style 的換行造成失效 */
+.status-dot{
+  width: .5rem; height: .5rem; border-radius: 9999px;
+  background: #22c55e;
+}
+
+/* 次要資訊的顏色與斷行行為 */
+.info-meta{
+  color: var(--subtext-color);
+  margin-top: .25rem;
+  font-size: .875rem;
+  line-height: 1.4;
+  word-break: break-word;
+}
+.break-anywhere{ word-break: break-all; overflow-wrap: anywhere; }
+.mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+
+/* 讓名稱與型號在空間不足時優雅截斷 */
+.history-title{ margin-right: .25rem; max-width: 50%; }
+.history-title.truncate, .history-subtitle.truncate{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 </style>
