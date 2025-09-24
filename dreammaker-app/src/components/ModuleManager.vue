@@ -56,7 +56,7 @@
           <input
             v-model.trim="formData.title"
             type="text"
-            class="input"
+            class="input w-full"
             placeholder="輸入模組標題"
             @keyup.enter="submit"
           />
@@ -66,7 +66,7 @@
           <label class="form-label">模組內容 *</label>
           <textarea
             v-model.trim="formData.content"
-            class="input textarea"
+            class="input textarea w-full"
             rows="4"
             :placeholder="getPlaceholder(formData.type)"
           />
@@ -77,7 +77,7 @@
           <input
             v-model="formData.toneHints"
             type="text"
-            class="input"
+            class="input w-full"
             placeholder="用逗號分隔，例如：溫柔, 抒情, 文學感"
           />
         </div>
@@ -87,7 +87,7 @@
           <input
             v-model="formData.versionNote"
             type="text"
-            class="input"
+            class="input w-full"
             placeholder="例如：溫柔版 v1、冷酷版 v2"
             @keyup.enter="submit"
           />
@@ -282,8 +282,8 @@ function resetForm() {
 </script>
 
 <style scoped>
-.module-manager {   
-  text-align: center; 
+.module-manager {
+  text-align: left;
 }
 
 
@@ -298,6 +298,9 @@ function resetForm() {
 .form-title{ margin:0; font-weight:600; color: var(--text-color); }
 .form-content{ padding: var(--spacing-xl); }
 .form-row{ margin-bottom: var(--spacing-lg); }
+.form-label{ display:block; margin-bottom: .5rem; }
+/* 讓此頁表單欄位撐滿卡片寬度，避免寬度不一致 */
+.form-content .input{ width: 100%; }
 .form-actions{
   display:flex; gap: var(--spacing-md);
   margin-top: var(--spacing-xl); padding-top: var(--spacing-lg);
