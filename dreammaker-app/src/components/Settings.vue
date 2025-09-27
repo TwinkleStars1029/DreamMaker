@@ -1,31 +1,31 @@
-<template>
+﻿<template>
   <div class="settings space-y-6">
-    <!-- 頁首 -->
+    <!-- ?? -->
     <div class="page-header">
-      <h2 class="page-title">設定</h2>
+      <h2 class="page-title">閮剖?</h2>
     </div>
 
-    <!-- AI 供應商設定 -->
+    <!-- AI 靘??身摰?-->
     <section class="modern-card">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="form-title">AI 供應商設定</h3>
+        <h3 class="form-title">AI 靘??身摰?/h3>
         <button
           type="button"
           @click="showAddProviderDialog = true"
           class="btn btn-primary"
         >
-          新增供應商
+          ?啣?靘???
         </button>
       </div>
 
-      <!-- 列表 -->
+      <!-- ?” -->
       <div class="space-y-4">
         <article
           v-for="config in providerConfigs"
           :key="config.id"
           class="modern-card provider-card"
         >
-          <!-- 左側：供應商資訊 -->
+          <!-- 撌血嚗???鞈? -->
           <div class="provider-info">
             <div class="info-header">
               <span class="tag shrink-0" :class="getProviderColor(config.provider)">
@@ -36,35 +36,35 @@
               <span
                 v-if="config.isActive"
                 class="status-dot"
-                title="目前使用中"
+                title="?桀?雿輻銝?
               ></span>
             </div>
 
             <p class="info-meta">
               API Key: <span class="mono">{{ maskApiKey(config.apiKey) }}</span>
-              <span v-if="config.endpoint"> ｜ 端點: <span class="break-anywhere">{{ config.endpoint }}</span></span>
+              <span v-if="config.endpoint"> 嚚?蝡舫?: <span class="break-anywhere">{{ config.endpoint }}</span></span>
             </p>
           </div>
 
-          <!-- 右側：操作按鈕 -->
+          <!-- ?喳嚗?雿???-->
           <div class="provider-actions">
-            <button type="button" @click="editProvider(config)" class="action-btn action-btn-edit">編輯</button>
+            <button type="button" @click="editProvider(config)" class="action-btn action-btn-edit">蝺刻摩</button>
             <button
               type="button"
               @click="testProvider(config)"
               :disabled="isTesting"
               class="action-btn action-btn-edit"
             >
-              {{ isTesting ? '測試中...' : '測試' }}
+              {{ isTesting ? '皜祈岫銝?..' : '皜祈岫' }}
             </button>
             <button
               type="button"
               @click="toggleProvider(config)"
               class="action-btn action-btn-delete"
             >
-              {{ config.isActive ? '停用' : '啟用' }}
+              {{ config.isActive ? '?' : '?' }}
             </button>
-            <button type="button" @click="deleteProvider(config.id)" class="action-btn action-btn-delete">刪除</button>
+            <button type="button" @click="deleteProvider(config.id)" class="action-btn action-btn-delete">?芷</button>
           </div>
         </article>
 
@@ -72,39 +72,39 @@
         <div v-if="providerConfigs.length === 0" class="empty-state">
           <div class="empty-state-card">
             <div class="empty-state-icon"><div class="spinner-warm mx-auto"></div></div>
-            <p class="empty-state-text">還沒有設定任何 AI 供應商</p>
-            <button type="button" class="btn btn-primary mt-3" @click="showAddProviderDialog = true">新增供應商</button>
+            <p class="empty-state-text">???身摰遙雿?AI 靘???/p>
+            <button type="button" class="btn btn-primary mt-3" @click="showAddProviderDialog = true">?啣?靘???/button>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 預設設定 -->
+    <!-- ?身閮剖? -->
     <section class="modern-card">
-      <h3 class="form-title mb-4">預設設定</h3>
+      <h3 class="form-title mb-4">資料管理</h3>
       <div class="space-y-4">
         <div>
-          <label class="form-label">預設供應商</label>
+          <label class="form-label">?身靘???/label>
           <select v-model="defaultProvider" class="input w-full">
-            <option value="">選擇預設供應商</option>
+            <option value="">?豢??身靘???/option>
             <option v-for="config in activeProviders" :key="config.id" :value="config.id">
-              {{ config.name }}（{{ getProviderLabel(config.provider) }}）
+              {{ config.name }}嚗{ getProviderLabel(config.provider) }}嚗?
             </option>
           </select>
         </div>
 
         <div>
-          <label class="form-label">預設溫度</label>
+          <label class="form-label">?身皞怠漲</label>
           <input v-model.number="defaultTemperature" type="range" min="0" max="2" step="0.1" class="w-full" />
           <div class="flex justify-between text-xs" style="color:var(--subtext-color); margin-top:.25rem;">
-            <span>0（保守）</span>
+            <span>0嚗?摰?</span>
             <span>{{ defaultTemperature }}</span>
-            <span>2（創意）</span>
+            <span>2嚗??</span>
           </div>
         </div>
 
         <div>
-          <label class="form-label">最大 Token 數</label>
+          <label class="form-label">?憭?Token ??/label>
           <input
             v-model.number="defaultMaxTokens"
             type="number"
@@ -112,42 +112,84 @@
             max="4000"
             step="100"
             class="input w-full"
-            placeholder="例如：1000"
+            placeholder="靘?嚗?000"
           />
         </div>
       </div>
     </section>
 
-    <!-- 資料管理 -->
+    <!-- 鞈?蝞∠? -->
     <section class="modern-card">
       <h3 class="form-title mb-4">資料管理</h3>
       <div class="flex flex-wrap gap-3 mb-3">
-        <button type="button" @click="exportAllData" class="btn btn-secondary">匯出所有資料</button>
         <button type="button" @click="importData" class="btn btn-primary">匯入資料</button>
         <button type="button" @click="clearAllData" class="btn btn-outline">清除所有資料</button>
       </div>
+      <!-- ?臬?賊?嚗?暸?批捆嚗?-->
+      <div class="space-y-3 mt-4">
+        <h4 class="form-title">?臬?賊?</h4>
+        <div class="flex items-center gap-4">
+          <label class="flex items-center gap-2">
+            <input v-model="exportFormat" type="radio" value="json" />
+            <span>JSON</span>
+          </label>
+          <label class="flex items-center gap-2">
+            <input v-model="exportFormat" type="radio" value="csv" />
+            <span>CSV</span>
+          </label>
+        </div>
+        <div class="text-sm" style="color:var(--subtext-color);">
+          快速選擇：
+          <button type="button" class="action-btn action-btn-edit" @click="setExportPreset('all')">全部</button>
+          <button type="button" class="action-btn action-btn-edit" @click="setExportPreset('rolesModules')">角色+模組</button>
+          <button type="button" class="action-btn action-btn-edit" @click="setExportPreset('settings')">僅設定</button>
+          <button type="button" class="action-btn action-btn-delete" @click="setExportPreset('none')">全不選</button>
+        </div>
+        <div class="flex flex-wrap gap-4">
+          <label class="flex items-center gap-2">
+            <input v-model="exportOptions.includeRoles" type="checkbox" />
+            <span>閫</span>
+          </label>
+          <label class="flex items-center gap-2">
+            <input v-model="exportOptions.includeModules" type="checkbox" />
+            <span>璅∠?</span>
+          </label>
+          <label class="flex items-center gap-2">
+            <input v-model="exportOptions.includeConversations" type="checkbox" />
+            <span>撠店</span>
+          </label>
+          <label class="flex items-center gap-2">
+            <input v-model="exportOptions.includeSettings" type="checkbox" />
+            <span>閮剖?</span>
+          </label>
+        </div>
+        <div>
+          <button type="button" class="btn btn-secondary" :disabled="!canExport" @click="exportSelectedData">?臬鞈?</button>
+        </div>
+      </div>
+
       <div class="text-sm" style="color:var(--subtext-color);">
-        <p>• 匯出：將所有角色、模組、對話和設定匯出為 JSON 檔案</p>
-        <p>• 匯入：從 JSON 檔案匯入資料（會合併到現有資料中）</p>
-        <p>• 清除：刪除所有本地資料（請謹慎使用）</p>
+        <p>???臬嚗?????脯芋蝯?閰勗?閮剖??臬??JSON 瑼?</p>
+        <p>???臬嚗? JSON 瑼??臬鞈?嚗??蔥?啁???葉嚗?/p>
+        <p>??皜嚗?斗???啗???隢牲?蝙?剁?</p>
       </div>
     </section>
 
-    <!-- 新增/編輯供應商對話框 -->
+    <!-- ?啣?/蝺刻摩靘???閰望? -->
     <div v-if="showAddProviderDialog || editingProvider" class="modal-backdrop">
       <div class="modern-card">
-        <h3 class="form-title mb-4">{{ editingProvider ? '編輯供應商' : '新增供應商' }}</h3>
+        <h3 class="form-title mb-4">資料管理</h3>
 
         <div class="space-y-4">
           <div>
-            <label class="form-label">供應商名稱 *</label>
-            <input v-model="providerForm.name" type="text" class="input w-full" placeholder="例如：我的 OpenAI 帳號" />
+            <label class="form-label">靘???蝔?*</label>
+            <input v-model="providerForm.name" type="text" class="input w-full" placeholder="靘?嚗???OpenAI 撣唾?" />
           </div>
 
           <div>
-            <label class="form-label">供應商類型 *</label>
+            <label class="form-label">靘?????*</label>
             <select v-model="providerForm.provider" @change="onProviderChange" class="input w-full">
-              <option value="">選擇供應商</option>
+              <option value="">?豢?靘???/option>
               <option value="openai">OpenAI</option>
               <option value="gemini">Google Gemini</option>
               <option value="azure">Azure OpenAI</option>
@@ -155,33 +197,33 @@
           </div>
 
           <div>
-            <label class="form-label">模型 *</label>
+            <label class="form-label">璅∪? *</label>
             <select v-model="providerForm.model" class="input w-full">
-              <option value="">選擇模型</option>
+              <option value="">?豢?璅∪?</option>
               <option v-for="model in availableModels" :key="model" :value="model">{{ model }}</option>
             </select>
           </div>
 
           <div v-if="providerForm.provider === 'azure'">
-            <label class="form-label">端點 *</label>
+            <label class="form-label">蝡舫? *</label>
             <input v-model="providerForm.endpoint" type="url" class="input w-full" placeholder="https://your-resource.openai.azure.com" />
           </div>
 
           <div>
             <label class="form-label">API Key *</label>
-            <input v-model="providerForm.apiKey" type="password" class="input w-full" placeholder="輸入 API Key" />
+            <input v-model="providerForm.apiKey" type="password" class="input w-full" placeholder="頛詨 API Key" />
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label class="form-label">溫度</label>
+              <label class="form-label">皞怠漲</label>
               <input v-model.number="providerForm.params.temperature" type="range" min="0" max="2" step="0.1" class="w-full" />
               <div class="text-center text-xs" style="color:var(--subtext-color); margin-top:.25rem;">
                 {{ providerForm.params.temperature }}
               </div>
             </div>
             <div>
-              <label class="form-label">最大 Token</label>
+              <label class="form-label">?憭?Token</label>
               <input
                 v-model.number="providerForm.params.maxTokens"
                 type="number"
@@ -200,9 +242,9 @@
               :disabled="!canSaveProvider"
               class="btn btn-primary"
             >
-              {{ editingProvider ? '更新' : '新增' }}
+              {{ editingProvider ? '?湔' : '?啣?' }}
             </button>
-            <button type="button" @click="cancelProvider" class="btn btn-ghost">取消</button>
+            <button type="button" @click="cancelProvider" class="btn btn-ghost">??</button>
           </div>
         </div>
       </div>
@@ -215,10 +257,11 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useAppStore } from '../stores/useAppStore'
 import { aiService } from '../services/aiService'
 import type { ProviderConfig } from '../services/aiService'
+import type { Role, Module, Conversation } from '../types'
 
 const store = useAppStore()
 const {
-  // 原本只取了 provider 的 CRUD，這裡一併取出其他用到的資料與函式
+  // ??芸?鈭?provider ??CRUD嚗ㄐ銝雿萄??箏隞?啁?鞈??撘?
   roles, modules, conversations,
   createRole, createModule, createConversation,
   providerConfigs, createProviderConfig, updateProviderConfig, deleteProviderConfig
@@ -258,7 +301,7 @@ const canSaveProvider = computed(() =>
 const getProviderLabel = (p: string) =>
   ({ openai: 'OpenAI', gemini: 'Google Gemini', azure: 'Azure OpenAI' } as const)[p] || p
 
-// 用我們的 tag 系統上色
+// ?冽??? tag 蝟餌絞銝
 const getProviderColor = (p: string) => {
   switch (p) {
     case 'openai': return 'tag-success'
@@ -310,16 +353,16 @@ const updateProvider = () => {
 }
 
 const deleteProvider = (id: string) => {
-  if (window.confirm('確定要刪除這個供應商設定嗎？')) deleteProviderConfig(id)
+  if (window.confirm('蝣箏?閬?日???閮剖???')) deleteProviderConfig(id)
 }
 
 const testProvider = async (config: ProviderConfig) => {
   isTesting.value = true
   try {
     const ok = await aiService.validateApiKey(config.provider, config.apiKey, config.model, config.endpoint)
-    alert(ok ? 'API Key 驗證成功！' : 'API Key 驗證失敗，請檢查設定')
+    alert(ok ? 'API Key 撽???嚗? : 'API Key 撽?憭望?嚗?瑼Ｘ閮剖?')
   } catch (e:any) {
-    alert(`測試失敗: ${e?.message || '未知錯誤'}`)
+    alert(`皜祈岫憭望?: ${e?.message || '?芰?航炊'}`)
   } finally {
     isTesting.value = false
   }
@@ -341,7 +384,7 @@ const resetProviderForm = () => {
   editingProvider.value = null
 }
 
-/** 匯入/匯出/清除 **/
+/** ?臬/?臬/皜 **/
 const exportAllData = () => {
   const data = {
     version: '1.0.0',
@@ -377,24 +420,24 @@ const importData = () => {
     try {
       const text = await file.text()
       const data = JSON.parse(text)
-      if (!data.data) throw new Error('無效的資料格式')
+      if (!data.data) throw new Error('?⊥????撘?)
 
       let imported = 0
 
       if (Array.isArray(data.data.roles)) {
-        for (const r of data.data.roles) { try { createRole(r); imported++ } catch (e) { console.error('匯入角色失敗:', e) } }
+        for (const r of data.data.roles) { try { createRole(r); imported++ } catch (e) { console.error('?臬閫憭望?:', e) } }
       }
       if (Array.isArray(data.data.modules)) {
-        for (const m of data.data.modules) { try { createModule(m); imported++ } catch (e) { console.error('匯入模組失敗:', e) } }
+        for (const m of data.data.modules) { try { createModule(m); imported++ } catch (e) { console.error('?臬璅∠?憭望?:', e) } }
       }
       if (Array.isArray(data.data.conversations)) {
-        for (const c of data.data.conversations) { try { createConversation(c); imported++ } catch (e) { console.error('匯入對話失敗:', e) } }
+        for (const c of data.data.conversations) { try { createConversation(c); imported++ } catch (e) { console.error('?臬撠店憭望?:', e) } }
       }
 
       if (data.data.settings) {
         if (data.data.settings.providerConfigs) {
           for (const cfg of data.data.settings.providerConfigs) {
-            try { createProviderConfig(cfg) } catch (e) { console.error('匯入供應商設定失敗:', e) }
+            try { createProviderConfig(cfg) } catch (e) { console.error('?臬靘??身摰仃??', e) }
           }
         }
         if (data.data.settings.defaultSettings) {
@@ -402,27 +445,131 @@ const importData = () => {
         }
       }
 
-      alert(`匯入完成！共匯入 ${imported} 個項目`)
+      alert(`?臬摰?嚗?臬 ${imported} ???害)
     } catch (err:any) {
-      alert(`匯入失敗: ${err?.message || '未知錯誤'}`)
+      alert(`?臬憭望?: ${err?.message || '?芰?航炊'}`)
     }
   }
   input.click()
 }
 
 const clearAllData = () => {
-  if (window.confirm('確定要清除所有資料嗎？此操作無法復原！')) {
+  if (window.confirm('蝣箏?閬??斗?????嚗迨???⊥?敺拙?嚗?)) {
     roles.value = []
     modules.value = []
     conversations.value = []
     providerConfigs.value = []
     localStorage.removeItem('dreammaker-settings')
     localStorage.removeItem('dreammaker-data')
-    alert('所有資料已清除')
+    alert('????歇皜')
   }
 }
 
-/** 初始化與設定保存 **/
+/** ????閮剖?靽? **/
+// ?臬?賊?嚗?暸?批捆嚗?const exportFormat = ref<'json' | 'csv'>('json')
+const exportOptions = reactive({
+  includeRoles: true,
+  includeModules: true,
+  includeConversations: false,
+  includeSettings: false,
+})
+
+const setExportPreset = (preset: 'all' | 'rolesModules' | 'settings' | 'none') => {
+  switch (preset) {
+    case 'all':
+      exportOptions.includeRoles = true
+      exportOptions.includeModules = true
+      exportOptions.includeConversations = true
+      exportOptions.includeSettings = true
+      break
+    case 'rolesModules':
+      exportOptions.includeRoles = true
+      exportOptions.includeModules = true
+      exportOptions.includeConversations = false
+      exportOptions.includeSettings = false
+      break
+    case 'settings':
+      exportOptions.includeRoles = false
+      exportOptions.includeModules = false
+      exportOptions.includeConversations = false
+      exportOptions.includeSettings = true
+      break
+    default:
+      exportOptions.includeRoles = false
+      exportOptions.includeModules = false
+      exportOptions.includeConversations = false
+      exportOptions.includeSettings = false
+  }
+}
+const canExport = computed(() =>
+  exportOptions.includeRoles || exportOptions.includeModules ||
+  exportOptions.includeConversations || exportOptions.includeSettings
+)
+const exportSelectedData = () => {
+  if (!canExport.value) return
+  const data: any = { version: '1.0.0', exportedAt: new Date().toISOString(), data: {} }
+  if (exportOptions.includeRoles) data.data.roles = roles.value
+  if (exportOptions.includeModules) data.data.modules = modules.value
+  if (exportOptions.includeConversations) data.data.conversations = conversations.value
+  if (exportOptions.includeSettings) {
+    data.data.settings = {
+      providerConfigs: providerConfigs.value,
+      defaultSettings: JSON.parse(localStorage.getItem('dreammaker-settings') || '{}')
+    }
+  }
+  if (exportFormat.value === 'json') {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `dreammaker-export-${new Date().toISOString().split('T')[0]}.json`
+    document.body.appendChild(a); a.click(); document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  } else {
+    exportToCSV(data)
+  }
+}
+function getRoleModules(role: Role): Module[] {
+  const note = (role as any).notes as string | undefined
+  if (!note || !note.includes('璅∠?雿輻:')) return []
+  const ids = (note.split('璅∠?雿輻: ')[1] || '').split(',').map(s => s.trim()).filter(Boolean)
+  return ids.map(id => modules.value.find(m => m.id === id)).filter((m): m is Module => Boolean(m))
+}
+const exportToCSV = (data: any) => {
+  const csvData: string[] = []
+  if (data.data.roles) {
+    csvData.push('=== 閫鞈? ===')
+    csvData.push('ID,?迂,?膩,璅∠?璅?,璅∠?ID,撱箇???')
+    data.data.roles.forEach((role: Role) => {
+      const rms = getRoleModules(role)
+      const moduleTitles = rms.map(m => (m.title || '').replace(/\\"/g, '""')).join(',')
+      const moduleIds = rms.map(m => m.id).join(',')
+      csvData.push([role.id, `"${role.name}"`, `"${(role as any).description || ''}"`, `"${moduleTitles}"`, `"${moduleIds}"`, (role as any).createdAt || ''].join(','))
+    })
+    csvData.push('')
+  }
+  if (data.data.modules) {
+    csvData.push('=== 璅∠?鞈? ===')
+    csvData.push('ID,憿?,璅?,?批捆,隤除?內,撱箇???')
+    data.data.modules.forEach((module: Module) => {
+      csvData.push([module.id, module.type, `"${module.title}"`, `"${module.content.replace(/\\"/g, '""')}"`, `"${module.toneHints?.join(',') || ''}"`, module.createdAt].join(','))
+    })
+    csvData.push('')
+  }
+  if (data.data.conversations) {
+    csvData.push('=== 撠店鞈? ===')
+    csvData.push('撠店ID,閫?ID,璅?,撱箇???,閮?賊?')
+    data.data.conversations.forEach((conv: Conversation) => {
+      csvData.push([conv.id, conv.roleVersionId, `"${conv.title || ''}"`, conv.createdAt, conv.messages?.length ?? 0].join(','))
+    })
+  }
+  const blob = new Blob([csvData.join('\n')], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a'); a.href = url
+  a.download = `dreammaker-export-${new Date().toISOString().split('T')[0]}.csv`
+  document.body.appendChild(a); a.click(); document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
 onMounted(() => {
   const raw = localStorage.getItem('dreammaker-settings')
   if (raw) {
@@ -431,7 +578,7 @@ onMounted(() => {
       defaultProvider.value = parsed.defaultProvider || ''
       defaultTemperature.value = parsed.defaultTemperature ?? 0.7
       defaultMaxTokens.value = parsed.defaultMaxTokens ?? 1000
-    } catch (e) { console.error('載入設定失敗:', e) }
+    } catch (e) { console.error('頛閮剖?憭望?:', e) }
   }
 })
 
@@ -450,7 +597,7 @@ watch([defaultProvider, defaultTemperature, defaultMaxTokens], saveSettings)
 .settings { padding: var(--spacing-lg); }
 
 
-/* 列表內文樣式（沿用前頁一致） */
+/* ?”?扳?璅??嚗窒?典????湛? */
 .history-title{ margin:0; color:var(--text-color); font-weight:600; }
 .history-subtitle{ color:var(--subtext-color); font-size:.9rem; }
 
@@ -463,7 +610,7 @@ watch([defaultProvider, defaultTemperature, defaultMaxTokens], saveSettings)
 }
 .modal-card{ max-width: 720px; width: 100%; }
 
-/* 卡片以 Grid 佈局：左資訊，右操作；小螢幕改為上下堆疊 */
+/* ?∠?隞?Grid 雿?嚗椰鞈?嚗??嚗??Ｗ??寧銝??? */
 .provider-card{
   display: grid;
   grid-template-columns: 1fr auto;
@@ -476,9 +623,9 @@ watch([defaultProvider, defaultTemperature, defaultMaxTokens], saveSettings)
   }
 }
 
-/* 左側內容：標題列允許換行，但保持漂亮的間距 */
+/* 撌血?批捆嚗?憿??迂??嚗?靽?瞍漁??頝?*/
 .provider-info{
-  min-width: 0; /* 讓 truncate 生效 */
+  min-width: 0; /* 霈?truncate ?? */
 }
 .info-header{
   display: flex;
@@ -487,7 +634,7 @@ watch([defaultProvider, defaultTemperature, defaultMaxTokens], saveSettings)
   gap: .5rem .75rem;
 }
 
-/* 右側按鈕：可自動換行，不會把卡片撐寬 */
+/* ?喳??嚗?芸???嚗????∠??祝 */
 .provider-actions{
   display: flex;
   flex-wrap: wrap;
@@ -500,13 +647,13 @@ watch([defaultProvider, defaultTemperature, defaultMaxTokens], saveSettings)
   }
 }
 
-/* 綠點修正：避免 inline style 的換行造成失效 */
+/* 蝬?靽格迤嚗??inline style ??銵?憭望? */
 .status-dot{
   width: .5rem; height: .5rem; border-radius: 9999px;
   background: #22c55e;
 }
 
-/* 次要資訊的顏色與斷行行為 */
+/* 甈∟?鞈????脰??瑁?銵 */
 .info-meta{
   color: var(--subtext-color);
   margin-top: .25rem;
@@ -517,8 +664,12 @@ watch([defaultProvider, defaultTemperature, defaultMaxTokens], saveSettings)
 .break-anywhere{ word-break: break-all; overflow-wrap: anywhere; }
 .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
 
-/* 讓名稱與型號在空間不足時優雅截斷 */
+/* 霈?蝔梯????函征??頞單??芷??芣 */
 .history-title{ margin-right: .25rem; max-width: 50%; }
 .history-title.truncate, .history-subtitle.truncate{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 </style>
+
+
+
+
