@@ -45,7 +45,7 @@
           @click="startNewConversation"
           title="以目前角色開始新對話"
         >
-          ➕ 新對話
+          新對話
         </button>
       </div>
 
@@ -90,7 +90,7 @@
       <div class="prompt-preview card-soft" v-if="selectedRole">
         <div class="prompt-preview__header">
           <div class="flex items-center gap-2">
-            <span>🧩 送進模型的 Prompt（即時預覽）</span>
+            <span>送進模型的 Prompt（即時預覽）</span>
             <span class="prompt-meta">
               {{ promptCharCount }} 字 ≈ {{ approxTokens }} tokens
             </span>
@@ -103,7 +103,7 @@
               :disabled="!promptPreview"
               title="複製 Prompt 內容"
             >
-              📋 複製
+              複製
             </button>
             <button
               type="button"
@@ -128,8 +128,8 @@
     <!-- 對話區域 -->
     <section v-if="selectedRole" class="modern-card rounded-2xl overflow-hidden">
       <!-- 對話標題 -->
-        <div class="flex items-center justify-between" style="padding: var(--spacing-lg); border-bottom: 1px solid var(--border-light);">
-        <div class="flex items-center gap-4">
+        <div class="conversation-header flex items-center justify-between" style="padding: var(--spacing-lg); border-bottom: 1px solid var(--border-light);">
+        <div class="header-left flex items-center gap-4">
           <div class="avatar avatar-lg avatar-accent">
             <span>{{ selectedRole.name.charAt(0).toUpperCase() }}</span>
           </div>
@@ -144,21 +144,21 @@
             </div>
           </div>
         </div>
-        <div class="flex gap-2">
+        <div class="header-actions flex gap-2">
           <button
             type="button"
             @click="regenerateLastResponse"
             :disabled="!canRegenerate"
             class="btn btn-secondary"
           >
-            🔄 重新生成
+            重新生成
           </button>
           <button
             type="button"
             @click="clearConversation"
             class="btn btn-outline"
           >
-            🗑️ 清空對話
+            清空對話
           </button>
         </div>
       </div>
@@ -185,7 +185,7 @@
 
       <!-- 輸入區域 -->
       <div style="padding: var(--spacing-lg); border-top: 1px solid var(--border-light);">
-        <div class="flex gap-3">
+        <div class="input-row flex gap-3">
           <textarea
             v-model="newMessage"
             @keydown.enter.prevent="sendMessage"
@@ -291,7 +291,7 @@ const showSaveDialog = ref(false)
 const saveForm = reactive({ title: '' })
 
 // ===== 新增：Prompt 預覽相關 =====
-const isPromptOpen = ref(true)
+const isPromptOpen = ref(false)
 const promptPartsComputed = computed(() => buildRolePrompt())
 const promptPreview = computed(() => (promptPartsComputed.value || []).join('\n\n'))
 const promptCharCount = computed(() => promptPreview.value.length)
@@ -553,6 +553,8 @@ const buildRolePrompt = (): string[] => {
             promptParts.push(`背景故事：${module.content}`); break
           case 'instruction':
             promptParts.push(`行為指令：${module.content}`); break
+          case 'event':
+            promptParts.push(`事件：${module.content}`); break
         }
       }
     })
@@ -651,4 +653,37 @@ onMounted(() => {
 /* 淡入淡出 */
 .fade-enter-active, .fade-leave-active { transition: opacity .2s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+/* ===== Mobile RWD tweaks (<=640px) ===== */
+@media (max-width: 640px) {
+  .conversation-tester { padding: var(--spacing-md); }
+
+  /* Header stacks, actions become 2 columns */
+  .conversation-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md) !important;
+  }
+  .conversation-header .header-left { gap: var(--spacing-md); }
+  .conversation-header .avatar { width: 2.5rem; height: 2.5rem; font-size: 1rem; }
+  .conversation-header .header-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-sm);
+  }
+  .conversation-header .header-actions .btn { width: 100%; }
+
+  /* Messages pane uses viewport height for better fit */
+  .messages-pane { height: 45vh; padding: var(--spacing-sm) var(--spacing-md); }
+
+  /* Prompt preview header stacks */
+  .prompt-preview__header { flex-direction: column; align-items: flex-start; gap: var(--spacing-sm); }
+  .prompt-preview__content { max-height: 12rem; }
+
+  /* Input row stacks with full-width controls */
+  .input-row { flex-direction: column; gap: var(--spacing-sm); }
+  .input-row .input { width: 100%; }
+  .input-row .btn { width: 100%; }
+}
 </style>

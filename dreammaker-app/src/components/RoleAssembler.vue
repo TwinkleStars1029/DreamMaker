@@ -118,6 +118,10 @@
               <h5 class="config-title">指令片段</h5>
               <p class="config-text">{{ selectedModules.instruction.content }}</p>
             </div>
+            <div v-if="selectedModules.event" class="config-block info">
+              <h5 class="config-title">事件</h5>
+              <p class="config-text">{{ selectedModules.event.content }}</p>
+            </div>
           </div>
         </div>
 
@@ -152,6 +156,10 @@
             <h5 class="preview-title">指令片段</h5>
             <p class="preview-text">{{ selectedModules.instruction.content }}</p>
           </div>
+          <div v-if="selectedModules.event" class="preview-block info">
+            <h5 class="preview-title">事件</h5>
+            <p class="preview-text">{{ selectedModules.event.content }}</p>
+          </div>
         </div>
       </div>
 
@@ -176,8 +184,20 @@
               <div class="flex-1 min-w-0">
                 <h4 class="role-name">{{ role.name }}</h4>
                 <p class="role-desc line-clamp-2">{{ role.description }}</p>
-                <div v-if="role.tags?.length" class="flex flex-wrap gap-2 mt-3">
-                  <span v-for="tag in role.tags" :key="tag" class="tag tag-primary">{{ tag }}</span>
+                <div
+                  v-if="getRoleModules(role).length || role.tags?.length"
+                  class="flex flex-wrap gap-2 mt-3"
+                >
+                  <template v-if="getRoleModules(role).length">
+                    <span
+                      v-for="m in getRoleModules(role)"
+                      :key="m.id"
+                      class="tag tag-primary"
+                    >{{ m.title }}</span>
+                  </template>
+                  <template v-else>
+                    <span v-for="tag in role.tags" :key="tag" class="tag tag-primary">{{ tag }}</span>
+                  </template>
                 </div>
               </div>
             </div>
@@ -240,11 +260,12 @@ const roleName = ref('')
 const roleDescription = ref('')
 const nameInput = ref<HTMLInputElement | null>(null)
 
-const selectedModules = reactive<Record<'basic'|'persona'|'background'|'instruction', Module | null>>({
+const selectedModules = reactive<Record<'basic'|'persona'|'background'|'instruction'|'event', Module | null>>({
   basic: null,
   persona: null,
   background: null,
   instruction: null,
+  event: null,
 })
 
 const moduleTypes = [
@@ -252,6 +273,7 @@ const moduleTypes = [
   { value: 'persona', label: '性格特徵' },
   { value: 'background', label: '背景故事' },
   { value: 'instruction', label: '指令片段' },
+  { value: 'event', label: '事件' },
 ] as const
 
 // ---------- 驗證 ----------
@@ -265,12 +287,25 @@ function validateStep1(){ errors.name = roleName.value.trim() ? undefined : '請
 
 // ---------- 工具 ----------
 function getModulesByType(type: keyof typeof selectedModules) { return modules.filter(m => m.type === type) }
+// 取得角色所使用的模組（依 notes: "模組拼裝: id1,id2" 解析）
+function getRoleModules(role: Role): Module[] {
+  const note = (role as any).notes as string | undefined
+  if (!note || !note.includes('模組拼裝:')) return []
+  const ids = (note.split('模組拼裝: ')[1] || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean)
+  return ids
+    .map(id => modules.find(m => m.id === id))
+    .filter((m): m is Module => Boolean(m))
+}
 function getModuleTypeTone(type: keyof typeof selectedModules | string) {
   switch (type) {
     case 'basic': return 'bg-info'
     case 'persona': return 'bg-warn'
     case 'background': return 'bg-success'
     case 'instruction': return 'bg-danger'
+    case 'event': return 'bg-info'
     default: return 'bg-neutral'
   }
 }

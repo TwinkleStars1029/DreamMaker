@@ -11,7 +11,7 @@ export interface Role {
 
 export interface Module {
   id: string
-  type: 'persona' | 'background' | 'instruction'
+  type: 'basic' | 'persona' | 'background' | 'instruction' | 'event'
   title: string
   content: string
   toneHints?: string[]

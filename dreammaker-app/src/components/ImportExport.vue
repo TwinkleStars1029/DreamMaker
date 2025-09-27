@@ -240,6 +240,19 @@ const formatFileSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
+// 取得角色所使用的模組（依 notes: "模組拼裝: id1,id2" 解析）
+function getRoleModules(role: Role): Module[] {
+  const note = (role as any).notes as string | undefined
+  if (!note || !note.includes('模組拼裝:')) return []
+  const ids = (note.split('模組拼裝: ')[1] || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean)
+  return ids
+    .map(id => modules.value.find(m => m.id === id))
+    .filter((m): m is Module => Boolean(m))
+}
+
 const exportData = () => {
   if (!canExport.value) return
 
@@ -286,13 +299,16 @@ const exportToCSV = (data: any) => {
   
   if (data.data.roles) {
     csvData.push('=== 角色資料 ===')
-    csvData.push('ID,名稱,描述,標籤,建立時間')
+    csvData.push('ID,名稱,描述,模組標題,模組ID,建立時間')
     data.data.roles.forEach((role: Role) => {
+      const moduleTitles = getRoleModules(role).map(m => (m.title || '').replace(/"/g, '""')).join(',')
+      const moduleIds = getRoleModules(role).map(m => m.id).join(',')
       csvData.push([
         role.id,
         `"${role.name}"`,
         `"${role.description || ''}"`,
-        `"${role.tags?.join(',') || ''}"`,
+        `"${moduleTitles}"`,
+        `"${moduleIds}"`,
         role.createdAt
       ].join(','))
     })
@@ -317,14 +333,14 @@ const exportToCSV = (data: any) => {
   
   if (data.data.conversations) {
     csvData.push('=== 對話資料 ===')
-    csvData.push('對話ID,角色ID,標題,建立時間,訊息數量')
+    csvData.push('對話ID,角色版本ID,標題,建立時間,訊息數量')
     data.data.conversations.forEach((conv: Conversation) => {
       csvData.push([
         conv.id,
-        conv.roleId,
-        `"${conv.title}"`,
+        conv.roleVersionId,
+        `"${conv.title || ''}"`,
         conv.createdAt,
-        conv.messages.length
+        conv.messages?.length ?? 0
       ].join(','))
     })
   }
@@ -477,6 +493,7 @@ const parseCSV = (csvText: string): any => {
     
     if (line.startsWith('=== ')) {
       currentSection = line.replace(/=== | ===/g, '')
+      headers = []
       continue
     }
     
@@ -495,6 +512,35 @@ const parseCSV = (csvText: string): any => {
       }
       
       // 根據當前區段處理資料
+      // 新格式（含模組ID）的角色資料解析（插入提前處理並略過舊解析）
+      if (currentSection === '角色資料' && headers.length > 0) {
+        const h = headers.map(s => s.trim())
+        if (h.includes('模組ID') || h.includes('模組IDs')) {
+          const idx = (label: string) => h.indexOf(label)
+          const val = (i: number) => (i >= 0 ? (values[i] || '') : '')
+
+          const id = val(idx('ID'))
+          const name = val(idx('名稱')).replace(/\"/g, '') || ''
+          const description = val(idx('描述')).replace(/\"/g, '') || ''
+          const tagsCell = (val(idx('標籤')) || val(idx('模組標題'))).replace(/\"/g, '')
+          const tags = tagsCell ? tagsCell.split(',').map(s => s.trim()).filter(Boolean) : []
+          const moduleIdsCell = (val(idx('模組ID')) || val(idx('模組IDs'))).replace(/\"/g, '')
+          const notes = moduleIdsCell ? `模組拼裝: ${moduleIdsCell}` : ''
+          const createdAt = val(idx('建立時間')) || new Date().toISOString()
+
+          const role = {
+            id,
+            name,
+            description,
+            tags,
+            createdAt,
+            updatedAt: new Date().toISOString(),
+            notes,
+          }
+          data.data.roles.push(role)
+          continue
+        }
+      }
       if (currentSection === '角色資料' && headers.length > 0) {
         const role = {
           id: values[0],
