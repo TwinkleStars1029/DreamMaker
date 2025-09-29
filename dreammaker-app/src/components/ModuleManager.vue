@@ -96,6 +96,7 @@
             @keydown.meta.enter.prevent="submit"
             @keydown.ctrl.enter.prevent="submit"
           />
+          <small class="form-hint">目前字數：{{ contentCharCount }}</small>
         </div>
 
         <!-- Persona 專屬 -->
@@ -229,6 +230,9 @@ const expandedMap = reactive<Record<string, boolean>>({})
 const isExpanded = (id: string) => !!expandedMap[id]
 const toggleExpand = (id: string) => { expandedMap[id] = !expandedMap[id] }
 const isLong = (text: string) => (text?.length || 0) > 120 || /\n/.test(text)
+
+/** 內容字數統計 */
+const contentCharCount = computed(() => (formData.content?.length || 0))
 
 /** 模板 */
 const selectedTemplateId = ref('') // 目前範本
