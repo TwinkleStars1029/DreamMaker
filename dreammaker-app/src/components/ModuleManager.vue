@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="module-manager space-y-6">
     <!-- 頁首 -->
     <div class="page-header">
@@ -24,15 +24,12 @@
         v-for="type in moduleTypes"
         :key="type.value || 'all'"
         type="button"
+        :aria-pressed="selectedModuleType === type.value"
         @click="selectedModuleType = type.value"
-        :class="[
-          'btn','btn-sm',
-          selectedModuleType === type.value ? 'btn-secondary' : 'btn-ghost'
-        ]"
+        :class="['btn','btn-sm', selectedModuleType === type.value ? 'btn-secondary' : 'btn-ghost']"
       >
         {{ type.label }}
       </button>
-
     </div>
 
     <!-- 新增/編輯表單 -->
@@ -42,7 +39,8 @@
       </div>
 
       <div class="form-content">
-        <div class="form-row">
+        <!-- 類型 -->
+        <div class="form-row form-grid">
           <label class="form-label">模組類型 *</label>
           <select v-model="formData.type" class="input w-full">
             <option value="basic">基本資訊</option>
@@ -54,7 +52,7 @@
         </div>
 
         <!-- 模板套用(會覆蓋) -->
-        <div class="form-row">
+        <div class="form-row form-grid">
           <label class="form-label">套用模板</label>
           <div class="flex flex-wrap gap-2">
             <button
@@ -62,23 +60,21 @@
               :class="tplBtnClass('')"
               @click="handleTemplateSwitch('')"
             >無</button>
+
+            <!-- 通用渲染可支援任意數量模板 -->
             <button
-              v-if="availableTemplates[0]"
+              v-for="tpl in availableTemplates"
+              :key="tpl.id"
               type="button"
-              :class="tplBtnClass(availableTemplates[0].id)"
-              @click="handleTemplateSwitch(availableTemplates[0].id)"
-            >{{ availableTemplates[0] ? availableTemplates[0].name : '模板一' }}</button>
-            <button
-              v-if="availableTemplates[1]"
-              type="button"
-              :class="tplBtnClass(availableTemplates[1].id)"
-              @click="handleTemplateSwitch(availableTemplates[1].id)"
-            >{{ availableTemplates[1] ? availableTemplates[1].name : '模板二' }}</button>
+              :class="tplBtnClass(tpl.id)"
+              @click="handleTemplateSwitch(tpl.id)"
+            >{{ tpl.name }}</button>
           </div>
-          <small class="text-xs text-body">套用模板將會清空目前輸入內容</small>
+          <small class="form-hint">套用模板將會清空目前輸入內容</small>
         </div>
 
-        <div class="form-row">
+        <!-- 標題 -->
+        <div class="form-row form-grid">
           <label class="form-label">模組標題 *</label>
           <input
             v-model.trim="formData.title"
@@ -89,17 +85,21 @@
           />
         </div>
 
-        <div class="form-row">
+        <!-- 內容 -->
+        <div class="form-row form-grid">
           <label class="form-label">模組內容 *</label>
           <textarea
             v-model.trim="formData.content"
             class="input textarea w-full"
             rows="4"
             :placeholder="getPlaceholder(formData.type)"
+            @keydown.meta.enter.prevent="submit"
+            @keydown.ctrl.enter.prevent="submit"
           />
         </div>
 
-        <div class="form-row" v-if="formData.type === 'persona'">
+        <!-- Persona 專屬 -->
+        <div class="form-row form-grid" v-if="formData.type === 'persona'">
           <label class="form-label">語氣提示</label>
           <input
             v-model="formData.toneHints"
@@ -109,7 +109,8 @@
           />
         </div>
 
-        <div class="form-row">
+        <!-- 版本備註 -->
+        <div class="form-row form-grid">
           <label class="form-label">版本備註</label>
           <input
             v-model="formData.versionNote"
@@ -197,17 +198,24 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useAppStore } from '../stores/useAppStore'
 import type { Module } from '../types'
 import moduleTemplates from '../templates'
 
+/** Store 與響應性取用 */
 const store = useAppStore()
-const { modules, createModule, updateModule, deleteModule } = store
+// state 使用 storeToRefs 確保響應
+const { modules } = storeToRefs(store)
+// actions 可用一般解構
+const { createModule, updateModule, deleteModule } = store
 
+/** UI 狀態 */
 const selectedModuleType = ref('')
 const isCreating = ref(false)
 const editingId = ref<string | null>(null)
 
+/** 表單 */
 const formData = reactive({
   type: 'basic' as Module['type'],
   title: '',
@@ -216,16 +224,20 @@ const formData = reactive({
   versionNote: '',
 })
 
-// 模板套用相關
-
-// 內容展開/收合狀態
+/** 內容展開/收合 */
 const expandedMap = reactive<Record<string, boolean>>({})
 const isExpanded = (id: string) => !!expandedMap[id]
 const toggleExpand = (id: string) => { expandedMap[id] = !expandedMap[id] }
 const isLong = (text: string) => (text?.length || 0) > 120 || /\n/.test(text)
+
+/** 模板 */
 const selectedTemplateId = ref('') // 目前範本
 const availableTemplates = computed(() => moduleTemplates[formData.type] || [])
-watch(() => formData.type, () => { selectedTemplateId.value = '' })
+watch(() => formData.type, (t) => {
+  selectedTemplateId.value = ''
+  // 切出 persona 時清掉 toneHints，避免殘留
+  if (t !== 'persona') formData.toneHints = ''
+})
 
 function tplBtnClass(id: string){
   const active = selectedTemplateId.value === id
@@ -252,6 +264,7 @@ function handleTemplateSwitch(targetId: string){
   formData.toneHints = tpl.toneHints?.join(', ') || ''
 }
 
+/** 篩選類別 */
 const moduleTypes = [
   { value: '', label: '全部' },
   { value: 'basic', label: '基本資訊' },
@@ -263,10 +276,11 @@ const moduleTypes = [
 
 const filteredModules = computed(() => {
   return selectedModuleType.value
-    ? modules.filter(m => m.type === selectedModuleType.value)
-    : modules
+    ? modules.value.filter(m => m.type === selectedModuleType.value)
+    : modules.value
 })
 
+/** 類型標籤與 placeholder */
 const getModuleTypeLabel = (type: Module['type']) => ({
   basic: '基本資訊',
   persona: '角色人設',
@@ -275,14 +289,13 @@ const getModuleTypeLabel = (type: Module['type']) => ({
   event: '事件',
 }[type])
 
-// 每個 type 對應到一個 tag 顏色，讓 .tag 呈現不同顏色
 function typeTone(type: Module['type']) {
   switch (type) {
     case 'basic':       return 'tag-info'
     case 'persona':     return 'tag-warning'
     case 'background':  return 'tag-success'
     case 'instruction': return 'tag-danger'
-    case 'event':       return 'tag-info'
+    case 'event':       return 'tag-primary' // 與 basic 區別
     default:            return 'tag-primary'
   }
 }
@@ -295,18 +308,30 @@ const getPlaceholder = (type: Module['type']) => ({
   event: '描述一個事件：觸發條件、過程、影響與限制',
 }[type])
 
+/** 提交流程 */
 function submit() {
   if (!formData.title.trim() || !formData.content.trim()) return
   editingId.value ? handleUpdate() : handleCreate()
 }
 
-function handleCreate() {
-  const toneHints = formData.toneHints
-    ? formData.toneHints.split(/[,，]/g).map(s => s.trim()).filter(Boolean)
+function parseToneHints(raw: string | undefined){
+  return raw
+    ? raw.split(/[,，]/g).map(s => s.trim()).filter(Boolean)
     : undefined
-  const title = formData.versionNote
-    ? `${formData.title} (${formData.versionNote})`
-    : formData.title
+}
+
+function stripVersionNote(title: string){
+  // 去掉末尾的括號版本說明（例如 "標題 (v2)"）
+  return title.replace(/\s*\([^()]*\)\s*$/, '').trim()
+}
+
+function buildTitleWithVersion(baseTitle: string, note: string){
+  return note ? `${stripVersionNote(baseTitle)} (${note})` : stripVersionNote(baseTitle)
+}
+
+function handleCreate() {
+  const toneHints = parseToneHints(formData.toneHints)
+  const title = buildTitleWithVersion(formData.title, formData.versionNote)
 
   createModule({
     type: formData.type,
@@ -329,12 +354,8 @@ function handleEdit(module: Module) {
 
 function handleUpdate() {
   if (!editingId.value) return
-  const toneHints = formData.toneHints
-    ? formData.toneHints.split(/[,，]/g).map(s => s.trim()).filter(Boolean)
-    : undefined
-  const title = formData.versionNote
-    ? `${formData.title} (${formData.versionNote})`
-    : formData.title
+  const toneHints = parseToneHints(formData.toneHints)
+  const title = buildTitleWithVersion(formData.title, formData.versionNote)
 
   updateModule(editingId.value, {
     type: formData.type,
@@ -345,9 +366,15 @@ function handleUpdate() {
   resetForm()
 }
 
-function handleDelete(id: string) {
-  if (window.confirm('確定要永久刪除這個模組嗎?')) {
-    deleteModule(id)
+async function handleDelete(id: string) {
+  if (!window.confirm('確定要永久刪除這個模組嗎?')) return
+  try {
+    await deleteModule(id)          // 等待 state 真正更新
+    // 若後端為最終來源，可在此選擇重新拉資料：
+    // await store.fetchModules()
+  } catch (err) {
+    console.error(err)
+    alert('刪除失敗，請稍後再試')
   }
 }
 
@@ -369,10 +396,7 @@ function resetForm() {
   text-align: left;
 }
 
-
-
-
-/* 表單卡片，沿用 modern-card 樣式 */
+/* 表單卡片 */
 .form-header{
   display:flex; align-items:center; justify-content:space-between;
   padding: var(--spacing-lg);
@@ -381,9 +405,35 @@ function resetForm() {
 .form-title{ margin:0; font-weight:600; color: var(--text-color); }
 .form-content{ padding: var(--spacing-xl); }
 .form-row{ margin-bottom: var(--spacing-lg); }
-.form-label{ display:block; margin-bottom: .5rem; }
+
+/* 兩欄網格：左側固定 label，右側自適應 */
+.form-grid {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: var(--spacing-md) var(--spacing-lg);
+  align-items: start;
+}
+
+/* label 與多行控件對齊 */
+.form-label{
+  display:block; margin-bottom: .5rem;
+  line-height: 1.6;
+  padding-top: 0.4rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+/* 小提示與說明文字靠右欄 */
+.form-hint{
+  grid-column: 2 / 3;
+  font-size: 12px;
+  color: var(--subtext-color);
+  margin-top: -0.25rem;
+}
+
 /* 讓此區塊的 input 寬度為父層的 100% */
 .form-content .input{ width: 100%; }
+
 .form-actions{
   display:flex; gap: var(--spacing-md);
   margin-top: var(--spacing-xl); padding-top: var(--spacing-lg);
@@ -402,9 +452,10 @@ function resetForm() {
   white-space: pre-line;
 }
 
+/* 列表文字可讀性 */
+.role-description { line-height: 1.7; }
 
-
-/* 無資料的提示卡片樣式，與 Role 頁面共用 */
+/* 無資料的提示卡片樣式 */
 .empty-state{ display:flex; justify-content:center; align-items:center; min-height: 320px; }
 .empty-state-card{
   background: var(--surface-card); backdrop-filter: blur(12px);
@@ -422,5 +473,12 @@ function resetForm() {
   .page-header{ flex-direction: column; gap: var(--spacing-md); text-align:center; }
   .form-content{ padding: var(--spacing-lg); }
   .form-actions{ flex-direction: column; }
+
+  .form-grid {
+    grid-template-columns: 1fr;  /* 直式堆疊 */
+  }
+  .form-hint {
+    grid-column: 1 / -1;
+  }
 }
 </style>

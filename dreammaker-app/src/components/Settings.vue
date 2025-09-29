@@ -154,19 +154,22 @@
     </section>
 
     <!-- 新增/編輯供應商對話框 -->
+    <!-- 新增/編輯供應商對話框 -->
     <div v-if="showAddProviderDialog || editingProvider" class="modal-backdrop">
-      <div class="modern-card">
+      <div class="modern-card" style="max-width: 600px;">
         <h3 class="form-title mb-4">{{ editingProvider ? '編輯供應商' : '新增供應商' }}</h3>
 
-        <div class="space-y-4">
-          <div>
-            <label class="form-label">供應商名稱 *</label>
-            <input v-model="providerForm.name" type="text" class="input w-full" placeholder="例如：我的 OpenAI 帳號" />
+        <div class="provider-form-grid">
+          <!-- 第一行：名稱（全寬） -->
+          <div class="form-row form-row-full">
+            <label class="form-label-inline">供應商名稱 *</label>
+            <input v-model="providerForm.name" type="text" class="input flex-1" placeholder="例如：我的 OpenAI 帳號" />
           </div>
 
-          <div>
-            <label class="form-label">供應商平台 *</label>
-            <select v-model="providerForm.provider" @change="onProviderChange" class="input w-full">
+          <!-- 第二行：平台 + 模型 -->
+          <div class="form-row">
+            <label class="form-label-inline">供應商平台 *</label>
+            <select v-model="providerForm.provider" @change="onProviderChange" class="input flex-1">
               <option value="">請選擇供應商</option>
               <option value="openai">OpenAI</option>
               <option value="gemini">Google Gemini</option>
@@ -174,46 +177,51 @@
             </select>
           </div>
 
-          <div>
-            <label class="form-label">模型 *</label>
-            <select v-model="providerForm.model" class="input w-full">
+          <div class="form-row">
+            <label class="form-label-inline">模型 *</label>
+            <select v-model="providerForm.model" class="input flex-1">
               <option value="">請選擇模型</option>
               <option v-for="model in availableModels" :key="model" :value="model">{{ model }}</option>
             </select>
           </div>
 
-          <div v-if="providerForm.provider === 'azure'">
-            <label class="form-label">端點 *</label>
-            <input v-model="providerForm.endpoint" type="url" class="input w-full" placeholder="https://your-resource.openai.azure.com" />
+          <!-- Azure 端點（條件顯示，全寬） -->
+          <div v-if="providerForm.provider === 'azure'" class="form-row form-row-full">
+            <label class="form-label-inline">端點 *</label>
+            <input v-model="providerForm.endpoint" type="url" class="input flex-1" placeholder="https://your-resource.openai.azure.com" />
           </div>
 
-          <div>
-            <label class="form-label">API Key *</label>
-            <input v-model="providerForm.apiKey" type="password" class="input w-full" placeholder="輸入 API Key" />
+          <!-- API Key（全寬） -->
+          <div class="form-row form-row-full">
+            <label class="form-label-inline">API Key *</label>
+            <input v-model="providerForm.apiKey" type="password" class="input flex-1" placeholder="輸入 API Key" />
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="form-label">溫度</label>
+          <!-- 第三行：溫度 + Token -->
+          <div class="form-row">
+            <label class="form-label-inline">溫度</label>
+            <div class="flex-1">
               <input v-model.number="providerForm.params.temperature" type="range" min="0" max="2" step="0.1" class="w-full" />
               <div class="text-center text-xs" style="color:var(--subtext-color); margin-top:.25rem;">
                 {{ providerForm.params.temperature }}
               </div>
             </div>
-            <div>
-              <label class="form-label">最大 Token</label>
-              <input
-                v-model.number="providerForm.params.maxTokens"
-                type="number"
-                min="100"
-                max="4000"
-                step="100"
-                class="input w-full"
-              />
-            </div>
           </div>
 
-          <div class="flex gap-3">
+          <div class="form-row">
+            <label class="form-label-inline">最大 Token</label>
+            <input
+              v-model.number="providerForm.params.maxTokens"
+              type="number"
+              min="100"
+              max="4000"
+              step="100"
+              class="input flex-1"
+            />
+          </div>
+
+          <!-- 按鈕列（全寬） -->
+          <div class="form-row-full" style="display: flex; gap: .75rem; margin-top: .5rem;">
             <button
               type="button"
               @click="editingProvider ? updateProvider() : addProvider()"
@@ -587,4 +595,42 @@ watch([defaultProvider, defaultTemperature, defaultMaxTokens], saveSettings)
 
 .history-title{ margin-right: .25rem; max-width: 50%; }
 .history-title.truncate, .history-subtitle.truncate{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* === 供應商表單（新增/編輯）網格排列 === */
+.provider-form-grid{
+  display: grid;
+  grid-auto-rows: minmax(0, auto);
+  gap: .75rem; /* 行距 */
+}
+
+/* 每一行：標題 + 輸入框（同一行） */
+.provider-form-grid .form-row,
+.provider-form-grid .form-row-full{
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr); /* 固定標籤寬 + 伸縮輸入框 */
+  align-items: center;
+  gap: .75rem;
+}
+
+/* 標籤樣式（同一行呈現） */
+.provider-form-grid .form-label-inline{
+  display: block;
+  white-space: nowrap;
+  color: var(--text-color);
+  font-weight: 600;
+}
+
+/* 讓輸入框填滿該欄位 */
+.provider-form-grid .input{
+  width: 100%;
+}
+
+/* 響應式：小螢幕改為上下排列 */
+@media (max-width: 640px){
+  .provider-form-grid .form-row,
+  .provider-form-grid .form-row-full{
+    grid-template-columns: 1fr;
+  }
+  .provider-form-grid .form-label-inline{ margin-bottom: .25rem; }
+}
 </style>

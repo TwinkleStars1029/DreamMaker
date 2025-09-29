@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="role-builder space-y-6" @keydown="onGlobalKeydown">
     <!-- 頁首 + 流程步驟條 -->
     <div class="page-header">
@@ -175,10 +175,10 @@
 
     <!-- 列表區（非建立流程時顯示） -->
     <section v-if="!isCreatingRole" class="space-y-6">
-      <div v-if="roles.length > 0" class="modern-card">
+      <div v-if="rolesList.length > 0" class="modern-card">
         <h3 class="form-title mb-6">已建立的角色</h3>
         <div class="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          <article v-for="role in roles" :key="role.id" class="modern-card role-card hoverable">
+          <article v-for="role in rolesList" :key="role.id" class="modern-card role-card hoverable">
             <div class="flex items-start gap-4">
               <div class="avatar avatar-lg" :aria-label="`${role.name} 的頭像（預設）`"><span>{{ role.name?.charAt(0)?.toUpperCase() }}</span></div>
               <div class="flex-1 min-w-0">
@@ -244,15 +244,18 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useAppStore } from '../stores/useAppStore'
 import type { Module, Role } from '../types'
 
+/** 取用 Store：state 用 storeToRefs 保持響應；actions 用一般解構 */
 const store = useAppStore()
-const { modules, roles, createRole, updateRole, deleteRole } = store
+const { modules, roles } = storeToRefs(store)
+const { createRole, updateRole, deleteRole } = store
 
 // ---------- 狀態 ----------
 const isCreatingRole = ref(false)
-const editingRoleId = ref<string | null>(null) // 新增：編輯中的角色 ID
+const editingRoleId = ref<string | null>(null)
 const currentStep = ref<1|2|3>(1)
 const submitting = ref(false)
 
@@ -276,6 +279,9 @@ const moduleTypes = [
   { value: 'event', label: '事件' },
 ] as const
 
+// 用於列表區顯示的角色陣列（響應式）
+const rolesList = computed(() => roles.value)
+
 // ---------- 驗證 ----------
 const errors = reactive<{ name?: string }>({})
 const hasAnyModule = computed(() => Object.values(selectedModules).some(m => m !== null))
@@ -286,7 +292,9 @@ const canNextFromStep2 = computed(() => hasAnyModule.value)
 function validateStep1(){ errors.name = roleName.value.trim() ? undefined : '請輸入角色名稱'; return !errors.name }
 
 // ---------- 工具 ----------
-function getModulesByType(type: keyof typeof selectedModules) { return modules.filter(m => m.type === type) }
+function getModulesByType(type: keyof typeof selectedModules) {
+  return modules.value.filter(m => m.type === type)
+}
 // 取得角色所使用的模組（依 notes: "模組拼裝: id1,id2" 解析）
 function getRoleModules(role: Role): Module[] {
   const note = (role as any).notes as string | undefined
@@ -296,7 +304,7 @@ function getRoleModules(role: Role): Module[] {
     .map(s => s.trim())
     .filter(Boolean)
   return ids
-    .map(id => modules.find(m => m.id === id))
+    .map(id => modules.value.find(m => m.id === id))
     .filter((m): m is Module => Boolean(m))
 }
 function getModuleTypeTone(type: keyof typeof selectedModules | string) {
@@ -311,7 +319,9 @@ function getModuleTypeTone(type: keyof typeof selectedModules | string) {
 }
 const getModuleTypeIcon = (type: keyof typeof selectedModules | string) => ({ basic: '👤', persona: '💫', background: '📚', instruction: '🎯' } as const)[type] || '📝'
 
-function selectModule(module: Module) { selectedModules[module.type as keyof typeof selectedModules] = module }
+function selectModule(module: Module) {
+  selectedModules[module.type as keyof typeof selectedModules] = module
+}
 function focusName() { nextTick(() => nameInput.value?.focus()) }
 
 // ---------- 快捷鍵 ----------
@@ -324,7 +334,7 @@ function onGlobalKeydown(e: KeyboardEvent) {
 
 // ---------- 草稿（localStorage） ----------
 const DRAFT_KEY = 'role-builder-draft'
-watch([roleName, roleDescription, () => JSON.stringify(selectedModules)], () => {
+watch([roleName, roleDescription, () => JSON.stringify(Object.values(selectedModules).map(m => m?.id))], () => {
   if (!isCreatingRole.value) return
   const draft = {
     roleName: roleName.value,
@@ -342,7 +352,10 @@ function loadDraft() {
     const d = JSON.parse(raw) as { roleName: string; roleDescription: string; selectedIds: string[]; step?: 1|2|3 }
     roleName.value = d.roleName || ''
     roleDescription.value = d.roleDescription || ''
-    if (Array.isArray(d.selectedIds)) d.selectedIds.forEach(id => { const m = modules.find(x => x.id === id); if (m) selectModule(m) })
+    if (Array.isArray(d.selectedIds)) d.selectedIds.forEach(id => {
+      const m = modules.value.find(x => x.id === id)
+      if (m) selectModule(m)
+    })
     currentStep.value = d.step || 1
   } catch {}
 }
@@ -351,14 +364,15 @@ function clearDraft() { localStorage.removeItem(DRAFT_KEY) }
 
 // 離開警示
 function beforeUnload(e: BeforeUnloadEvent) { if (!isCreatingRole.value) return; e.preventDefault(); e.returnValue = '' }
-import { onMounted, onBeforeUnmount } from 'vue'
 onMounted(() => { window.addEventListener('beforeunload', beforeUnload) })
 onBeforeUnmount(() => { window.removeEventListener('beforeunload', beforeUnload) })
 
 // ---------- Toast ----------
 const toasts = ref<Array<{ id: number; type: 'success' | 'error' | 'info'; message: string }>>([])
 function toast(message: string, type: 'success' | 'error' | 'info' = 'info', timeout = 2200) {
-  const id = Date.now() + Math.random(); toasts.value.push({ id, type, message }); setTimeout(() => { toasts.value = toasts.value.filter(t => t.id !== id) }, timeout)
+  const id = Date.now() + Math.random()
+  toasts.value.push({ id, type, message })
+  setTimeout(() => { toasts.value = toasts.value.filter(t => t.id !== id) }, timeout)
 }
 
 // ---------- 導覽控制 ----------
@@ -369,91 +383,90 @@ function goNext(){
 function goBack(){ if(currentStep.value>1) currentStep.value-- }
 
 // ---------- CRUD ----------
-function startNewRole() { 
-  isCreatingRole.value = true; 
-  editingRoleId.value = null; // 新增角色時清除編輯 ID
-  currentStep.value = 1; 
-  roleName.value = ''; 
-  roleDescription.value = ''; 
-  Object.keys(selectedModules).forEach(k => (selectedModules[k as keyof typeof selectedModules] = null)); 
-  loadDraft(); 
-  focusName() 
+function startNewRole() {
+  isCreatingRole.value = true
+  editingRoleId.value = null
+  currentStep.value = 1
+  roleName.value = ''
+  roleDescription.value = ''
+  Object.keys(selectedModules).forEach(k => (selectedModules[k as keyof typeof selectedModules] = null))
+  loadDraft()
+  focusName()
 }
 
 function editRole(role: Role) {
-  isCreatingRole.value = true; 
-  editingRoleId.value = role.id; // 設置編輯中的角色 ID
-  currentStep.value = 1; 
-  roleName.value = role.name || ''; 
-  roleDescription.value = role.description || ''; 
+  isCreatingRole.value = true
+  editingRoleId.value = role.id
+  currentStep.value = 1
+  roleName.value = role.name || ''
+  roleDescription.value = role.description || ''
   Object.keys(selectedModules).forEach(k => (selectedModules[k as keyof typeof selectedModules] = null))
-  if (role.notes?.includes('模組拼裝:')) { 
-    const moduleIds = role.notes.split('模組拼裝: ')[1]?.split(',') || []; 
-    moduleIds.forEach(id => { 
-      const m = modules.find(x => x.id === id); 
-      if (m) selectModule(m) 
-    }) 
+  if (role.notes?.includes('模組拼裝:')) {
+    const moduleIds = role.notes.split('模組拼裝: ')[1]?.split(',') || []
+    moduleIds.forEach(id => {
+      const m = modules.value.find(x => x.id === id)
+      if (m) selectModule(m)
+    })
   }
   focusName()
 }
 
 async function saveRole() {
-  if (!canSave.value) return; submitting.value = true
+  if (!canSave.value) return
+  submitting.value = true
   try {
     const moduleIds = Object.values(selectedModules).filter(Boolean).map(m => (m as Module).id)
     const tags = Object.values(selectedModules).filter(Boolean).map(m => (m as Module).type)
-    const roleData = { 
-      name: roleName.value.trim(), 
-      description: roleDescription.value.trim() || '由模組拼裝而成的角色', 
-      tags, 
-      notes: `模組拼裝: ${moduleIds.join(',')}` 
+    const roleData = {
+      name: roleName.value.trim(),
+      description: roleDescription.value.trim() || '由模組拼裝而成的角色',
+      tags,
+      notes: `模組拼裝: ${moduleIds.join(',')}`
     }
-    
+
     if (editingRoleId.value) {
-      // 編輯模式：更新現有角色
       await Promise.resolve(updateRole(editingRoleId.value, roleData))
       toast('已更新角色', 'success')
     } else {
-      // 新增模式：創建新角色
       await Promise.resolve(createRole(roleData))
       toast('已儲存角色', 'success')
     }
-    
-    clearDraft(); cancelCreateRole()
-  } catch (e) { 
-    console.error(e); 
-    toast('儲存失敗，稍後再試', 'error') 
-  } finally { 
-    submitting.value = false 
+
+    clearDraft()
+    cancelCreateRole()
+  } catch (e) {
+    console.error(e)
+    toast('儲存失敗，稍後再試', 'error')
+  } finally {
+    submitting.value = false
   }
 }
 
 function confirmDelete(id: string, name: string) { confirm.visible = true; confirm.id = id; confirm.name = name }
 
-async function handleDeleteRole(id: string | null) { 
-  if (!id) return; 
-  submitting.value = true; 
-  try { 
-    await Promise.resolve(deleteRole(id)); 
-    // 強制觸發響應式更新
-    await nextTick()
-    toast('已刪除角色', 'success') 
-  } catch (e) { 
-    console.error(e); 
-    toast('刪除失敗，稍後再試', 'error') 
-  } finally { 
-    submitting.value = false; 
-    confirm.visible = false 
-  } 
+async function handleDeleteRole(id: string | null) {
+  if (!id) return
+  submitting.value = true
+  try {
+    await Promise.resolve(deleteRole(id))
+    await nextTick() // 確保 DOM 依據更新後的 state 重新渲染
+    toast('已刪除角色', 'success')
+  } catch (e) {
+    console.error(e)
+    toast('刪除失敗，稍後再試', 'error')
+  } finally {
+    submitting.value = false
+    confirm.visible = false
+  }
 }
 
-function cancelCreateRole() { 
-  isCreatingRole.value = false; 
-  editingRoleId.value = null; // 清除編輯狀態
-  roleName.value = ''; 
-  roleDescription.value = ''; 
-  currentStep.value = 1; 
-  Object.keys(selectedModules).forEach(k => (selectedModules[k as keyof typeof selectedModules] = null)) 
+function cancelCreateRole() {
+  isCreatingRole.value = false
+  editingRoleId.value = null
+  roleName.value = ''
+  roleDescription.value = ''
+  currentStep.value = 1
+  Object.keys(selectedModules).forEach(k => (selectedModules[k as keyof typeof selectedModules] = null))
 }
 
 // 刪除確認對話框狀態
@@ -474,7 +487,6 @@ const confirm = reactive<{ visible: boolean; id: string | null; name: string }>(
 .step.done{ color:var(--text-color); }
 .step.done .step-index{ background:var(--button-bg-color); color:#fff; border-color:transparent; }
 .step-label{ font-weight:600; font-size:.95rem; }
-
 
 /* Wizard actions */
 .wizard-actions{ display:flex; justify-content:flex-end; gap:.75rem; margin-top:1rem; }
@@ -504,7 +516,7 @@ const confirm = reactive<{ visible: boolean; id: string | null; name: string }>(
 .config-title, .preview-title { margin:0 0 .5rem 0; font-size:.9rem; color: var(--text-color); }
 .config-text, .preview-text { margin:0; color: var(--subtext-color); }
 
-/* 列表卡片與空狀態（沿用） */
+/* 列表卡片與空狀態 */
 .role-name { margin:0; font-weight:600; color:var(--text-color); font-size:1rem; }
 .role-desc { color: var(--subtext-color); font-size:.9rem; }
 .line-clamp-2 { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
@@ -515,7 +527,7 @@ const confirm = reactive<{ visible: boolean; id: string | null; name: string }>(
 .empty-state-text{ margin:0 0 .25rem 0; font-weight:600; color:var(--text-color); font-size:1.25rem; }
 .empty-state-subtext{ color: var(--subtext-color); }
 
-/* Modal & Toast（沿用） */
+/* Modal & Toast */
 .modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.35); display:flex; align-items:center; justify-content:center; z-index:50; }
 .modal{ background:white; border-radius:var(--radius-xl); box-shadow:var(--shadow-xl); padding:1.5rem; width:min(520px, 92vw); }
 .modal-title{ font-size:1.125rem; font-weight:700; margin:0 0 .5rem 0; color:var(--text-color); }
