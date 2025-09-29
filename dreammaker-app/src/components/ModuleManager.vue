@@ -18,8 +18,8 @@
       </div>
     </div>
 
-    <!-- 快速分類 -->
-    <div class="flex flex-wrap gap-2">
+    <!-- 快速分類（新增/編輯時隱藏） -->
+    <div v-if="!isCreating" class="flex flex-wrap gap-2">
       <button
         v-for="type in moduleTypes"
         :key="type.value || 'all'"
@@ -135,8 +135,8 @@
       </div>
     </section>
 
-    <!-- 模組列表 -->
-    <div class="grid auto-rows-auto gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <!-- 模組列表（新增/編輯時隱藏） -->
+    <div v-if="!isCreating" class="grid auto-rows-auto gap-4 md:grid-cols-2 xl:grid-cols-3">
       <article
         v-for="module in filteredModules"
         :key="module.id"
@@ -180,8 +180,8 @@
       </article>
     </div>
 
-    <!-- 無資料 -->
-    <div v-if="filteredModules.length === 0" class="empty-state">
+    <!-- 無資料（新增/編輯時隱藏） -->
+    <div v-if="!isCreating && filteredModules.length === 0" class="empty-state">
       <div class="empty-state-card">
         <div class="empty-state-icon">
           <div class="spinner-warm mx-auto"></div>
