@@ -80,7 +80,18 @@
               :class="['item-card hoverable cursor-pointer', selectedModules[moduleType.value]?.id === module.id ? 'selected' : '']"
             >
               <div class="flex items-start gap-3">
-                <div :class="['dot', getModuleTypeTone(module.type)]" aria-hidden="true"></div>
+                <!-- 選取指示：僅在被選中時顯示打勾 -->
+                <div class="indicator" aria-hidden="true">
+                  <svg
+                    v-if="selectedModules[module.type]?.id === module.id"
+                    class="check"
+                    viewBox="0 0 24 24"
+                    focusable="false"
+                    aria-hidden="true"
+                  >
+                    <path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </div>
                 <div class="flex-1 min-w-0">
                   <h5 class="item-title">{{ module.title }}</h5>
                   <p class="item-desc line-clamp-2">{{ module.content }}</p>
@@ -494,7 +505,10 @@ const confirm = reactive<{ visible: boolean; id: string | null; name: string }>(
 /* 模組庫項目 */
 .hoverable { cursor:pointer; }
 .selected { border-color: var(--button-bg-color); box-shadow: 0 0 0 3px rgba(242,170,132,.12); background: var(--gradient-soft); }
-.dot { width: .75rem; height: .75rem; border-radius: 50%; margin-top: .25rem; }
+.indicator { width: 1rem; height: 1rem; border-radius: 999px; margin-top: .25rem; display:inline-flex; align-items:center; justify-content:center; border: 1px solid var(--border-light); background: var(--surface-elevated); }
+.check { width: .9rem; height: .9rem; color: var(--button-bg-color); }
+.item-card.selected .indicator { background: var(--button-bg-color); border-color: var(--button-bg-color); }
+.item-card.selected .indicator .check { color: #ffffff; }
 .bg-info { background: var(--info-color); }
 .bg-warn { background: var(--warning-color); }
 .bg-success { background: var(--success-color); }
