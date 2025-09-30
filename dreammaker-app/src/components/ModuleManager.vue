@@ -296,9 +296,9 @@ const getModuleTypeLabel = (type: Module['type']) => ({
 function typeTone(type: Module['type']) {
   switch (type) {
     case 'basic':       return 'tag-info'
-    case 'persona':     return 'tag-warning'
-    case 'background':  return 'tag-success'
-    case 'instruction': return 'tag-danger'
+    case 'persona':     return 'tag-persona'
+    case 'background':  return 'tag-bg'
+    case 'instruction': return 'tag-instruction'
     case 'event':       return 'tag-event'
     default:            return 'tag-primary'
   }

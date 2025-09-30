@@ -370,21 +370,35 @@ body {
 
 .tag-danger {
   background: var(--danger-light);
-  color: #8b2500;
+  color: #994222;
   border: 1px solid var(--danger-color);
 }
 
 .tag-info {
   background: var(--info-light);
-  color: #1e40af;
+  color: #2c4bb3;
+  border: 1px solid var(--info-color);
+}
+.tag-bg {
+  background: var(--info-light);
+  color: #28a124;
+  border: 1px solid var(--info-color);
+}
+.tag-persona {
+  background: var(--info-light);
+  color: #d8673b;
+  border: 1px solid var(--info-color);
+}
+.tag-instruction {
+  background: var(--info-light);
+  color: #bd263f;
   border: 1px solid var(--info-color);
 }
 
-/* Event 類型：與其他 tag-* 一致的外觀 */
 .tag-event {
-  background: #efe6fd;   /* 淡紫 (接近 violet-100) */
-  color: #5530a3;        /* 深紫文字 (接近 violet-700) */
-  border: 1px solid #7c3aed; /* 主色邊框 (violet-600) */
+  background: var(--info-light);
+  color: #7b58bd;
+  border: 1px solid var(--info-color);
 }
 
 /* 列表卡片上的動作按鈕，沿用你的風格 */

@@ -536,6 +536,7 @@ const confirm = reactive<{ visible: boolean; id: string | null; name: string }>(
 /* 列表卡片與空狀態 */
 .role-name { margin:0; font-weight:600; color:var(--text-color); font-size:1rem; }
 .role-desc { color: var(--subtext-color); font-size:.9rem; }
+.role-card { margin-left: auto; margin-right: auto; }
 .line-clamp-2 { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .empty-state{ display:flex; justify-content:center; align-items:center; min-height: 360px; }
 .empty-state-card{ background: var(--surface-card); backdrop-filter: blur(12px); border:1px solid var(--border-light); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); padding: 2.5rem; text-align:center; max-width:420px; width:100%; transition: all var(--transition-normal); }
