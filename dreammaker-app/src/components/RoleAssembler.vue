@@ -313,11 +313,11 @@ function getModuleTypeTone(type: keyof typeof selectedModules | string) {
     case 'persona': return 'bg-warn'
     case 'background': return 'bg-success'
     case 'instruction': return 'bg-danger'
-    case 'event': return 'bg-info'
+    case 'event': return 'bg-special'
     default: return 'bg-neutral'
   }
 }
-const getModuleTypeIcon = (type: keyof typeof selectedModules | string) => ({ basic: '👤', persona: '💫', background: '📚', instruction: '🎯' } as const)[type] || '📝'
+const getModuleTypeIcon = (type: keyof typeof selectedModules | string) => ({ basic: '👤', persona: '💫', background: '📚', instruction: '🎯', event: '🗓️' } as const)[type] || '📝'
 
 function selectModule(module: Module) {
   selectedModules[module.type as keyof typeof selectedModules] = module
@@ -499,6 +499,7 @@ const confirm = reactive<{ visible: boolean; id: string | null; name: string }>(
 .bg-warn { background: var(--warning-color); }
 .bg-success { background: var(--success-color); }
 .bg-danger { background: var(--danger-color); }
+.bg-special { background: var(--special-color); }
 .bg-neutral { background: var(--border-medium); }
 .item-title { margin:0; font-weight:600; color:var(--text-color); font-size:.95rem; }
 .item-desc { color: var(--subtext-color); font-size:.85rem; }
@@ -509,10 +510,12 @@ const confirm = reactive<{ visible: boolean; id: string | null; name: string }>(
 .config-block.warn { background: var(--warning-light); }
 .config-block.success { background: var(--success-light); }
 .config-block.danger { background: var(--danger-light); }
+.config-block.special { background: var(--special-light); }
 .preview-block.info { background: linear-gradient(135deg, var(--info-light), transparent); }
 .preview-block.warn { background: linear-gradient(135deg, var(--warning-light), transparent); }
 .preview-block.success { background: linear-gradient(135deg, var(--success-light), transparent); }
 .preview-block.danger { background: linear-gradient(135deg, var(--danger-light), transparent); }
+.preview-block.special { background: linear-gradient(135deg, var(--special-light), transparent); }
 .config-title, .preview-title { margin:0 0 .5rem 0; font-size:.9rem; color: var(--text-color); }
 .config-text, .preview-text { margin:0; color: var(--subtext-color); }
 

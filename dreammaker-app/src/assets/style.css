@@ -16,6 +16,8 @@
   --el-color-primary: var(--primary-color);
   --background-gradient: linear-gradient(180deg, var(--primary-color), var(--accent-color));
   --line-color: rgba(255, 119, 180, 0.2);
+  --special-color: #8B5CF6;
+  --special-light: #F5F3FF;
   
   
   /* 背景系統 */
@@ -374,6 +376,13 @@ body {
   background: var(--info-light);
   color: #1e40af;
   border: 1px solid var(--info-color);
+}
+
+/* Event 類型：與其他 tag-* 一致的外觀 */
+.tag-event {
+  background: #efe6fd;   /* 淡紫 (接近 violet-100) */
+  color: #5530a3;        /* 深紫文字 (接近 violet-700) */
+  border: 1px solid #7c3aed; /* 主色邊框 (violet-600) */
 }
 
 /* 列表卡片上的動作按鈕，沿用你的風格 */

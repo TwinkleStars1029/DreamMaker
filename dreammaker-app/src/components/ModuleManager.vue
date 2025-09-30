@@ -299,7 +299,7 @@ function typeTone(type: Module['type']) {
     case 'persona':     return 'tag-warning'
     case 'background':  return 'tag-success'
     case 'instruction': return 'tag-danger'
-    case 'event':       return 'tag-primary' // 與 basic 區別
+    case 'event':       return 'tag-event'
     default:            return 'tag-primary'
   }
 }
