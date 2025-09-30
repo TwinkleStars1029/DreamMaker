@@ -12,6 +12,8 @@
   --button-bg-color: #F2AA84; 
   --button-hover-bg-color: #e99a70;
   --button-text-color: #FFFFFF; 
+  /* Light variant used in gradients; define to avoid var() resolution issues on some mobile browsers */
+  --button-light: #F7C8A3;
   --subtext-color: #616161; 
   --el-color-primary: var(--primary-color);
   --background-gradient: linear-gradient(180deg, var(--primary-color), var(--accent-color));
@@ -462,6 +464,8 @@ body {
 }
 
 .message-user {
+  /* Fallback solid color for browsers that can't resolve var() inside gradients */
+  background: var(--button-bg-color);
   background: var(--gradient-button);
   color: var(--button-text-color);
   margin-left: auto;
