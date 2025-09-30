@@ -8,7 +8,6 @@ function App() {
     roles: { label: '角色管理', component: <RoleManager /> },
     assembler: { label: '拼裝工具', component: <div className="text-center py-12"><p className="text-gray-500">拼裝工具開發中...</p></div> },
     tester: { label: '對話測試', component: <div className="text-center py-12"><p className="text-gray-500">對話測試開發中...</p></div> },
-    compare: { label: '模型比較', component: <div className="text-center py-12"><p className="text-gray-500">模型比較開發中...</p></div> },
     settings: { label: '設定', component: <div className="text-center py-12"><p className="text-gray-500">設定頁面開發中...</p></div> },
   }
 

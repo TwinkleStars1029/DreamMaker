@@ -11,7 +11,6 @@ const pages = {
   modules: { label: '模組管理', component: ModuleManager },
   roles: { label: '角色建立', component: RoleAssembler },
   tester: { label: '對話測試', component: ConversationTester },
-  compare: { label: '模型比較', component: null },
   settings: { label: '設定', component: Settings },
 }
 
