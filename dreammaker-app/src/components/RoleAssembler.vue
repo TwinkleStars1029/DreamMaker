@@ -14,14 +14,17 @@
 
     <nav v-if="isCreatingRole" class="stepper" aria-label="建立角色流程">
       <ol class="stepper-list">
-        <li :class="['step', currentStep===1?'active':currentStep>1?'done':'']">
+        <li :class="['step', currentStep===1?'active':currentStep>1?'done':'']" @click="goToStep(1)" role="button" tabindex="0">
           <span class="step-index">1</span><span class="step-label">角色基本資訊</span>
         </li>
-        <li :class="['step', currentStep===2?'active':currentStep>2?'done':'']">
+        <li :class="['step', currentStep===2?'active':currentStep>2?'done':'']" @click="canJumpTo(2) && goToStep(2)" role="button" tabindex="0">
           <span class="step-index">2</span><span class="step-label">選擇模組</span>
         </li>
-        <li :class="['step', currentStep===3?'active':currentStep>3?'done':'']">
+        <li :class="['step', currentStep===3?'active':currentStep>3?'done':'']" @click="canJumpTo(3) && goToStep(3)" role="button" tabindex="0">
           <span class="step-index">3</span><span class="step-label">角色預覽</span>
+        </li>
+        <li :class="['step', currentStep===4?'active':currentStep>4?'done':'']" @click="canJumpTo(4) && goToStep(4)" role="button" tabindex="0">
+          <span class="step-index">4</span><span class="step-label">預覽</span>
         </li>
       </ol>
     </nav>
@@ -144,7 +147,41 @@
     </section>
 
     <!-- 步驟 3：預覽 + 儲存 -->
-    <section v-if="isCreatingRole && currentStep===3" class="space-y-6">
+    <!-- 步驟 3：模組拚裝（模板編輯 + 預覽） -->
+    <section v-if="isCreatingRole && currentStep===3" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div class="space-y-4">
+        <h3 class="form-title">模組拚裝模板</h3>
+        <div class="modern-card">
+          <div class="flex flex-wrap gap-2 mb-3">
+            <button type="button" class="btn btn-outline" @click="insertPlaceholder('[BASIC]')">插入 [角色基本資訊]</button>
+            <button type="button" class="btn btn-outline" @click="insertPlaceholder('[PERSONA]')">插入 [性格特徵]</button>
+            <button type="button" class="btn btn-outline" @click="insertPlaceholder('[TONE]')">插入 [語氣特點]</button>
+            <button type="button" class="btn btn-outline" @click="insertPlaceholder('[BACKGROUND]')">插入 [背景故事]</button>
+            <button type="button" class="btn btn-outline" @click="insertPlaceholder('[EVENT]')">插入 [事件]</button>
+            <button type="button" class="btn btn-outline" @click="insertPlaceholder('[INSTRUCTION]')">插入 [行為指令]</button>
+            <div class="flex-1"></div>
+            <button type="button" class="btn btn-ghost" @click="resetTemplate">重設為預設模板</button>
+          </div>
+          <textarea ref="templateInput" v-model="assemblyTemplate" class="input textarea w-full font-mono" rows="16" placeholder="在此編輯拚裝模板，支援上方佔位符"></textarea>
+          <div class="flex items-center justify-end mt-2 text-xs" style="color: var(--subtext-color);">
+            <span>字數：{{ assembledCharCount }}，約 {{ assembledApproxTokens }} tokens</span>
+          </div>
+        </div>
+      </div>
+      <div class="space-y-4">
+        <h3 class="form-title">即時預覽</h3>
+        <div class="modern-card">
+          <pre class="prompt-preview__content" style="min-height: 24rem; white-space: pre-wrap;">{{ assembledPreview }}</pre>
+        </div>
+        <div class="wizard-actions">
+          <button class="btn btn-secondary" @click="goBack">← 上一步</button>
+          <button class="btn btn-primary" :disabled="!canNextFromStep3" @click="goNext">下一步 →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 步驟 4：最終預覽 + 儲存 -->
+    <section v-if="isCreatingRole && currentStep===4" class="space-y-6">
       <div class="modern-card glass">
         <h3 class="form-title mb-4">角色預覽</h3>
         <div class="space-y-4">
@@ -196,12 +233,12 @@
                 <h4 class="role-name">{{ role.name }}</h4>
                 <p class="role-desc line-clamp-2">{{ role.description }}</p>
                 <div
-                  v-if="getRoleModules(role).length || role.tags?.length"
+                  v-if="getRoleModulesSafe(role).length || role.tags?.length"
                   class="flex flex-wrap gap-2 mt-3"
                 >
-                  <template v-if="getRoleModules(role).length">
+                  <template v-if="getRoleModulesSafe(role).length">
                     <span
-                      v-for="m in getRoleModules(role)"
+                      v-for="m in getRoleModulesSafe(role)"
                       :key="m.id"
                       class="tag tag-primary"
                     >{{ m.title }}</span>
@@ -267,12 +304,30 @@ const { createRole, updateRole, deleteRole } = store
 // ---------- 狀態 ----------
 const isCreatingRole = ref(false)
 const editingRoleId = ref<string | null>(null)
-const currentStep = ref<1|2|3>(1)
+const currentStep = ref<1|2|3|4>(1)
 const submitting = ref(false)
 
 const roleName = ref('')
 const roleDescription = ref('')
 const nameInput = ref<HTMLInputElement | null>(null)
+// 模組拚裝：模板輸入與內容
+const templateInput = ref<HTMLTextAreaElement | null>(null)
+const assemblyTemplate = ref<string>(`# 任務
+請參考此份角色設定，扮演角色與我對話
+
+# 角色設定
+## 角色基本資訊
+[角色基本資訊]
+## 性格特徵
+[性格特徵]
+[語氣特點]
+## 背景故事
+[背景故事]
+## 事件
+[事件]
+## 行為指令
+[行為指令]
+`)
 
 const selectedModules = reactive<Record<'basic'|'persona'|'background'|'instruction'|'event', Module | null>>({
   basic: null,
@@ -299,6 +354,12 @@ const hasAnyModule = computed(() => Object.values(selectedModules).some(m => m !
 const canSave = computed(() => !!roleName.value.trim() && hasAnyModule.value)
 const canNextFromStep1 = computed(() => !!roleName.value.trim())
 const canNextFromStep2 = computed(() => hasAnyModule.value)
+const canNextFromStep3 = computed(() => !!assemblyTemplate.value.trim())
+
+// 組裝預覽與計數
+const assembledPreview = computed(() => renderTemplate(assemblyTemplate.value))
+const assembledCharCount = computed(() => assembledPreview.value.length)
+const assembledApproxTokens = computed(() => Math.max(1, Math.ceil(assembledCharCount.value / 2)))
 
 function validateStep1(){ errors.name = roleName.value.trim() ? undefined : '請輸入角色名稱'; return !errors.name }
 
@@ -314,6 +375,19 @@ function getRoleModules(role: Role): Module[] {
     .split(',')
     .map(s => s.trim())
     .filter(Boolean)
+  return ids
+    .map(id => modules.value.find(m => m.id === id))
+    .filter((m): m is Module => Boolean(m))
+}
+// 更安全的解析（僅取模組ID行，避免模板內容干擾）
+function getRoleModulesSafe(role: Role): Module[] {
+  const note = (role as any).notes as string | undefined
+  if (!note) return []
+  const marker = '模組拼裝: '
+  if (!note.includes(marker)) return []
+  const after = note.split(marker)[1] || ''
+  const idLine = after.split('\n')[0] || after.split('\r')[0] || after
+  const ids = idLine.split(',').map(s => s.trim()).filter(Boolean)
   return ids
     .map(id => modules.value.find(m => m.id === id))
     .filter((m): m is Module => Boolean(m))
@@ -339,17 +413,18 @@ function focusName() { nextTick(() => nameInput.value?.focus()) }
 function onGlobalKeydown(e: KeyboardEvent) {
   const mod = e.ctrlKey || e.metaKey
   if (!isCreatingRole.value) return
-  if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); if(currentStep.value===3) saveRole(); else goNext() }
-  if (mod && e.key.toLowerCase() === 'p') { e.preventDefault(); if(currentStep.value<3 && canNextFromStep1.value){ currentStep.value=3 } }
+  if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); if(currentStep.value===4) saveRole(); else goNext() }
+  if (mod && e.key.toLowerCase() === 'p') { e.preventDefault(); if(currentStep.value<4 && canNextFromStep1.value){ currentStep.value=4 } }
 }
 
 // ---------- 草稿（localStorage） ----------
 const DRAFT_KEY = 'role-builder-draft'
-watch([roleName, roleDescription, () => JSON.stringify(Object.values(selectedModules).map(m => m?.id))], () => {
+watch([roleName, roleDescription, assemblyTemplate, () => JSON.stringify(Object.values(selectedModules).map(m => m?.id))], () => {
   if (!isCreatingRole.value) return
   const draft = {
     roleName: roleName.value,
     roleDescription: roleDescription.value,
+    assemblyTemplate: assemblyTemplate.value,
     selectedIds: Object.values(selectedModules).filter(Boolean).map(m => (m as Module).id),
     step: currentStep.value,
   }
@@ -360,9 +435,10 @@ function loadDraft() {
   const raw = localStorage.getItem(DRAFT_KEY)
   if (!raw) return
   try {
-    const d = JSON.parse(raw) as { roleName: string; roleDescription: string; selectedIds: string[]; step?: 1|2|3 }
+    const d = JSON.parse(raw) as { roleName: string; roleDescription: string; selectedIds: string[]; assemblyTemplate?: string; step?: 1|2|3|4 }
     roleName.value = d.roleName || ''
     roleDescription.value = d.roleDescription || ''
+    if (typeof d.assemblyTemplate === 'string') assemblyTemplate.value = d.assemblyTemplate
     if (Array.isArray(d.selectedIds)) d.selectedIds.forEach(id => {
       const m = modules.value.find(x => x.id === id)
       if (m) selectModule(m)
@@ -390,8 +466,18 @@ function toast(message: string, type: 'success' | 'error' | 'info' = 'info', tim
 function goNext(){
   if(currentStep.value===1){ if(!validateStep1()) return; currentStep.value=2 }
   else if(currentStep.value===2){ if(!hasAnyModule.value) return; currentStep.value=3 }
+  else if(currentStep.value===3){ if(!canNextFromStep3.value) return; currentStep.value=4 }
 }
 function goBack(){ if(currentStep.value>1) currentStep.value-- }
+
+function goToStep(step: 1|2|3|4){ currentStep.value = step }
+function canJumpTo(step: number){
+  if (step<=1) return true
+  if (step===2) return validateStep1()
+  if (step===3) return validateStep1() && hasAnyModule.value
+  if (step===4) return validateStep1() && hasAnyModule.value && canNextFromStep3.value
+  return false
+}
 
 // ---------- CRUD ----------
 function startNewRole() {
@@ -402,6 +488,20 @@ function startNewRole() {
   roleDescription.value = ''
   Object.keys(selectedModules).forEach(k => (selectedModules[k as keyof typeof selectedModules] = null))
   loadDraft()
+  // 解析拚裝模板（可選）
+  if ((role as any).notes?.includes('模組拚裝模板:')) {
+    const afterTpl = ((role as any).notes as string).split('模組拚裝模板:')[1]
+    if (typeof afterTpl === 'string') {
+      const tpl = afterTpl.replace(/^\s*/, '')
+      if (tpl.trim()) assemblyTemplate.value = tpl
+    }
+  } else if ((role as any).notes?.includes('模組拼裝模板:')) {
+    const afterTpl = ((role as any).notes as string).split('模組拼裝模板:')[1]
+    if (typeof afterTpl === 'string') {
+      const tpl = afterTpl.replace(/^\s*/, '')
+      if (tpl.trim()) assemblyTemplate.value = tpl
+    }
+  }
   focusName()
 }
 
@@ -432,7 +532,8 @@ async function saveRole() {
       name: roleName.value.trim(),
       description: roleDescription.value.trim() || '由模組拼裝而成的角色',
       tags,
-      notes: `模組拼裝: ${moduleIds.join(',')}`
+      assemblyTemplate: assemblyTemplate.value,
+      notes: `模組拼裝: ${moduleIds.join(',')}` + (assemblyTemplate.value?.trim() ? `\n模組拚裝模板: \n${assemblyTemplate.value}` : '')
     }
 
     if (editingRoleId.value) {
@@ -478,10 +579,49 @@ function cancelCreateRole() {
   roleDescription.value = ''
   currentStep.value = 1
   Object.keys(selectedModules).forEach(k => (selectedModules[k as keyof typeof selectedModules] = null))
+  resetTemplate()
 }
 
 // 刪除確認對話框狀態
 const confirm = reactive<{ visible: boolean; id: string | null; name: string }>({ visible: false, id: null, name: '' })
+
+// ===== 模組拚裝：插入佔位、模板渲染 =====
+function insertPlaceholder(placeholder: string){
+  const el = templateInput.value
+  if (!el) { assemblyTemplate.value += placeholder; return }
+  const start = el.selectionStart || 0
+  const end = el.selectionEnd || 0
+  const before = assemblyTemplate.value.slice(0, start)
+  const after = assemblyTemplate.value.slice(end)
+  assemblyTemplate.value = before + placeholder + after
+  nextTick(() => { const pos = start + placeholder.length; el.focus(); el.setSelectionRange(pos, pos) })
+}
+
+function resetTemplate(){
+  assemblyTemplate.value = `# 任務\n請參考此份角色設定，扮演角色與我對話\n\n# 角色設定\n## 角色基本資訊\n[角色基本資訊]\n## 性格特徵\n[性格特徵]\n[語氣特點]\n## 背景故事\n[背景故事]\n## 事件\n[事件]\n## 行為指令\n[行為指令]\n`
+}
+
+function renderTemplate(tpl: string){
+  const basic = selectedModules.basic?.content || ''
+  const persona = selectedModules.persona?.content || ''
+  const tone = selectedModules.persona?.toneHints?.join('、') || ''
+  const background = selectedModules.background?.content || ''
+  const event = selectedModules.event?.content || ''
+  const instruction = selectedModules.instruction?.content || ''
+  return (tpl || '')
+    .replaceAll('[角色基本資訊]', basic)
+    .replaceAll('[BASIC]', basic)
+    .replaceAll('[性格特徵]', persona)
+    .replaceAll('[PERSONA]', persona)
+    .replaceAll('[語氣特點]', tone)
+    .replaceAll('[TONE]', tone)
+    .replaceAll('[背景故事]', background)
+    .replaceAll('[BACKGROUND]', background)
+    .replaceAll('[事件]', event)
+    .replaceAll('[EVENT]', event)
+    .replaceAll('[行為指令]', instruction)
+    .replaceAll('[INSTRUCTION]', instruction)
+}
 </script>
 
 <style scoped>

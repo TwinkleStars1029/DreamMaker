@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="conversation-tester space-y-6">
     <!-- 頁首 -->
     <div class="page-header">
@@ -128,7 +128,7 @@
     <!-- 對話區域 -->
     <section v-if="selectedRole" class="modern-card rounded-2xl overflow-hidden">
       <!-- 對話標題 -->
-        <div class="conversation-header flex items-center justify-between" style="padding: var(--spacing-lg); border-bottom: 1px solid var(--border-light);">
+      <div class="conversation-header flex items-center justify-between" style="padding: var(--spacing-lg); border-bottom: 1px solid var(--border-light);">
         <div class="header-left flex items-center gap-4">
           <div class="avatar avatar-lg avatar-accent">
             <span>{{ selectedRole.name.charAt(0).toUpperCase() }}</span>
@@ -274,7 +274,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useAppStore } from '../stores/useAppStore'
 import { aiService, mockAiService } from '../services/aiService'
-import type { Role, Module, Conversation, Message } from '../types'
+import type { Role, Module, Conversation, Message, ProviderConfig } from '../types'
 
 const emit = defineEmits<{(e:'navigate', to:'roles'|string):void}>()
 
@@ -292,7 +292,7 @@ const saveForm = reactive({ title: '' })
 
 // ===== 新增：Prompt 預覽相關 =====
 const isPromptOpen = ref(false)
-const promptPartsComputed = computed(() => buildRolePrompt())
+const promptPartsComputed = computed(() => buildRolePromptV2())
 const promptPreview = computed(() => (promptPartsComputed.value || []).join('\n\n'))
 const promptCharCount = computed(() => promptPreview.value.length)
 // 粗估 tokens（保守）：字數 / 2
@@ -532,6 +532,7 @@ const handleDeleteConversation = (id: string) => {
   }
 }
 
+// v1：簡單按 notes 的「模組拼裝:」取模組，轉成字串片段
 const buildRolePrompt = (): string[] => {
   const promptParts: string[] = []
   if (!selectedRole.value) return promptParts
@@ -566,13 +567,101 @@ const buildRolePrompt = (): string[] => {
   return promptParts
 }
 
+// v2：支援 notes 內的「模組拼裝:」與「模組拼裝模板:」，可用 [BASIC]/[PERSONA]/[TONE]/[BACKGROUND]/[EVENT]/[INSTRUCTION]
+const buildRolePromptV2 = (): string[] => {
+  const parts: string[] = []
+  const role = selectedRole.value
+  if (!role) return parts
+
+  const notes = (role as any).notes as string | undefined
+
+  const parseModuleIds = (): string[] => {
+    if (!notes) return []
+    const marker = '模組拼裝: '
+    if (notes.includes(marker)) {
+      const after = notes.split(marker)[1] || ''
+      const line = after.split('\n')[0]?.split('\r')[0] || after
+      return line.split(',').map(s => s.trim()).filter(Boolean)
+    }
+    return []
+  }
+
+  const selectedByType: Record<Module['type'], Module | undefined> = {
+    basic: undefined, persona: undefined, background: undefined, instruction: undefined, event: undefined
+  }
+  const ids = parseModuleIds()
+  ids.forEach(id => {
+    const m = modules.find(mm => mm.id === id)
+    if (m) selectedByType[m.type] = m
+  })
+
+  let template: string | undefined
+  if (notes && notes.includes('模組拼裝模板:')) {
+    template = notes.split('模組拼裝模板:')[1]?.replace(/^\s*/, '')
+  }
+  if (!template || !template.trim()) {
+    const t = (role as any).assemblyTemplate as string | undefined
+    if (typeof t === 'string' && t.trim()) template = t
+  }
+
+  if (template && template.trim()) {
+    const basic = selectedByType.basic?.content || ''
+    const persona = selectedByType.persona?.content || ''
+    const tone = (selectedByType.persona?.toneHints || []).join('、')
+    const background = selectedByType.background?.content || ''
+    const event = selectedByType.event?.content || ''
+    const instruction = selectedByType.instruction?.content || ''
+
+    const rendered = template
+      .replaceAll('[BASIC]', basic)
+      .replaceAll('[PERSONA]', persona)
+      .replaceAll('[TONE]', tone)
+      .replaceAll('[BACKGROUND]', background)
+      .replaceAll('[EVENT]', event)
+      .replaceAll('[INSTRUCTION]', instruction)
+      // 同時兼容中文標籤
+      .replaceAll('[角色基本資訊]', basic)
+      .replaceAll('[性格特徵]', persona)
+      .replaceAll('[語氣特點]', tone)
+      .replaceAll('[背景故事]', background)
+      .replaceAll('[事件設定]', event)
+      .replaceAll('[行為指令]', instruction)
+
+    parts.push(rendered.trim())
+  } else if (ids.length) {
+    // 沒有模板就按模組順序輸出片段
+    ids.forEach(moduleId => {
+      const module = modules.find(m => m.id === moduleId)
+      if (!module) return
+      switch (module.type) {
+        case 'basic':
+          parts.push(`角色基本資訊：${module.content}`); break
+        case 'persona': {
+          let personaPrompt = `性格特徵：${module.content}`
+          if (module.toneHints?.length) personaPrompt += `\n語氣特點：${module.toneHints.join('、')}`
+          parts.push(personaPrompt); break
+        }
+        case 'background':
+          parts.push(`背景故事：${module.content}`); break
+        case 'instruction':
+          parts.push(`行為指令：${module.content}`); break
+        case 'event':
+          parts.push(`事件設定：${module.content}`); break
+      }
+    })
+  } else {
+    parts.push(`你是「${role.name}」：${role.description}`)
+  }
+  return parts
+}
+
 const formatTime = (dateString: string) =>
   new Date(dateString).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })
 
 onMounted(() => {
   if (roles.length > 0 && !selectedRole.value) selectRole(roles[0])
-  
-  // 設定預設供應商
+
+  // 若有啟用的供應商且尚未選擇，預設第一個
   if (activeProviders.value.length > 0 && !selectedProvider.value) {
     selectedProvider.value = activeProviders.value[0]
   }
